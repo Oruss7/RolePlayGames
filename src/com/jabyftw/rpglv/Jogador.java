@@ -24,7 +24,7 @@ public class Jogador {
         this.exp = exp;
         classe = pl.getClasse(clas);
         expNeeded = classe.getExpNeeded(level);
-        retriveItemReward();
+        retriveItemAndPermReward();
         sendStatsToPlayer();
     }
     
@@ -87,12 +87,12 @@ public class Jogador {
     
     private void broadcastLevel(int level) {
         if (classe.getBroadcastLevels().contains(level)) {
-            pl.broadcast(pl.getLang("broadcastLevel").replaceAll("%name", p.getDisplayName()).replaceAll("%level", Integer.toString(level)).replaceAll("%classe", classe.getName()));
+            pl.broadcast(pl.getLang("broadcastLevel").replaceAll("%name", p.getDisplayName()).replaceAll("%level", Integer.toString(level)).replaceAll("%class", classe.getName()));
         }
     }
     
-    private void retriveItemReward() {
-        classe.retriveItemReward(this);
+    private void retriveItemAndPermReward() {
+        classe.retriveItemAndPermReward(this);
     }
     
     public void sendStatsToPlayer() {

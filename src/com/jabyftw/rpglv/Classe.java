@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -86,7 +87,7 @@ public class Classe {
         }
         return 0;
     }
-    
+
     public int getSmeltGain(Material mat) {
         if (smeltgain.containsKey(mat)) {
             return smeltgain.get(mat);
@@ -106,20 +107,23 @@ public class Classe {
         return name;
     }
 
-    public void retriveItemReward(Jogador j) {
+    public void retriveItemAndPermReward(Jogador j) {
         for (int i = 0; i <= j.getLevel(); i++) {
             if (itemRewards.containsKey(i)) {
-                itemRewards.get(i).giveReward(j);
+                itemRewards.get(i).giveReward(j, false);
+            }
+            if (permRewards.containsKey(i)) {
+                permRewards.get(i).giveReward(j.getPlayer(), false);
             }
         }
     }
 
     public void giveReward(int level, Jogador j) {
         if (itemRewards.containsKey(level)) {
-            itemRewards.get(level).giveReward(j);
+            itemRewards.get(level).giveReward(j, true);
         }
         if (permRewards.containsKey(level)) {
-            permRewards.get(level).giveReward(j.getPlayer());
+            permRewards.get(level).giveReward(j.getPlayer(), true);
         }
         if (moneyRewards.containsKey(level)) {
             moneyRewards.get(level).giveReward(j.getPlayer());
@@ -164,9 +168,11 @@ public class Classe {
             this.reward = pl.getMatFromString(s);
         }
 
-        public void giveReward(Jogador j) {
+        public void giveReward(Jogador j, boolean announce) {
             j.addItemPerm(reward);
-            j.getPlayer().sendMessage(pl.getLang("youNowCanUse").replaceAll("%material", reward.toString().toLowerCase().replaceAll("_", " ")));
+            if (announce) {
+                j.getPlayer().sendMessage(pl.getLang("youNowCanUse").replaceAll("%material", reward.toString().toLowerCase().replaceAll("_", " ")));
+            }
         }
 
         private Material getReward() {
@@ -182,9 +188,12 @@ public class Classe {
             this.reward = s;
         }
 
-        public void giveReward(Player p) {
-            pl.perm.playerAdd(p, reward);
-            p.sendMessage(pl.getLang("youGainedAPermission"));
+        public void giveReward(Player p, boolean announce) {
+            if (pl.perm.playerAdd(p, reward)) {
+                if (announce) {
+                    p.sendMessage(pl.getLang("youGainedAPermission"));
+                }
+            }
         }
     }
 
