@@ -1,0 +1,12 @@
+name: RPGLeveling
+version: 0.1
+author: rfsantos1996
+main: com.jabyftw.rpglv.RPGLeveling
+description: RPG like level and unlocking of items
+permissions:
+   rpglevel.:
+     description: 
+     default: true
+   nodropondeath.restore:
+     description: On respawn, will gain have his items
+     default: op
