@@ -41,21 +41,29 @@ public class MySQL {
     }
 
     public void createTable() {
-        pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
+        pl.getServer().getScheduler().scheduleSyncDelayedTask(pl, new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    getConn().createStatement().executeUpdate(""); // (`name`, `level`, `exp`, `class`)
+                    getConn().createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS `rpgplayers` (\n"
+                            + "  `name` VARCHAR(20) NOT NULL,\n"
+                            + "  `level` INT NOT NULL DEFAULT 0,\n"
+                            + "  `exp` INT NOT NULL DEFAULT 0,\n"
+                            + "  `class` VARCHAR(45) NOT NULL,\n"
+                            + "  PRIMARY KEY (`name`),\n"
+                            + "  UNIQUE INDEX `name_UNIQUE` (`name` ASC));");
                 } catch (SQLException e) {
                     e.printStackTrace();
+                    pl.getLogger().log(Level.SEVERE, "Disabling plugin, cant create table.");
+                    pl.getServer().getPluginManager().disablePlugin(pl);
                 }
             }
         });
     }
 
     public void insertPlayer(String name, int level, int exp, String classe) {
-        final String name2 = name;
+        final String name2 = name.toLowerCase();
         final int level2 = level;
         final int exp2 = exp;
         final String classe2 = classe;
@@ -73,7 +81,7 @@ public class MySQL {
     }
 
     public void updatePlayer(String name, int level, int exp, String classe) {
-        final String name2 = name;
+        final String name2 = name.toLowerCase();
         final int level2 = level;
         final int exp2 = exp;
         final String classe2 = classe;
@@ -104,5 +112,20 @@ public class MySQL {
             e.printStackTrace();
         }
         return j;
+    }
+
+    public void deletePlayer(String n) {
+        final String name = n.toLowerCase();
+        pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    getConn().createStatement().execute("DELETE FROM `rpgplayers` WHERE `name`='" + name + "';");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

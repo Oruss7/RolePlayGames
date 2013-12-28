@@ -1,6 +1,5 @@
 package com.jabyftw.rpglv;
 
-import com.jabyftw.rpglv.listeners.PlayerListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * @author Rafael
  */
 public class RPGLeveling extends JavaPlugin {
-
+    
     public MySQL sql;
     public Config config;
     public FileConfiguration defConfig, lang;
@@ -31,45 +30,56 @@ public class RPGLeveling extends JavaPlugin {
     public Map<Player, Jogador> players = new HashMap();
     public Classe defaultClass;
     public List<Classe> classes = new ArrayList();
-
+    
     @Override
     public void onEnable() {
         config = new Config(this);
         config.start();
+        sql.createTable();
         log("Loaded configuration!");
         setupVault();
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
-        log("Registered listeners and Vault!");
+        getServer().getPluginCommand("class").setExecutor(new RPGExecutor(this));
+        log("Registered commands, listeners and Vault!");
     }
-
+    
     @Override
     public void onDisable() {
-
+        
     }
-
+    
     public void log(String msg) {
         getLogger().log(Level.INFO, msg);
     }
-
+    
     public void broadcast(String msg) {
         for (Player p : getServer().getOnlinePlayers()) {
             p.sendMessage(msg);
         }
     }
-
+    
     public String getLang(String path) {
         return lang.getString("lang." + path).replaceAll("&", "§");
     }
-
+    
     public Material getMatFromString(String s) {
         for (Material m : Material.values()) {
             if (m.toString().equalsIgnoreCase(s)) {
                 return m;
             }
         }
+        try {
+            int id = Integer.parseInt(s);
+            for (Material m : Material.values()) {
+                if (m.getId() == id) {
+                    return m;
+                }
+            }
+        } catch (NumberFormatException e) {
+        }
         return Material.DIAMOND_SPADE;
     }
-
+    
     public Classe getClasse(String name) {
         for (Classe c : classes) {
             if (c.getName().equalsIgnoreCase(name)) {
@@ -77,8 +87,9 @@ public class RPGLeveling extends JavaPlugin {
             }
         }
         return defaultClass;
+        
     }
-
+    
     private void setupVault() {
         RegisteredServiceProvider<Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
         if (permissionProvider != null) {
@@ -89,9 +100,9 @@ public class RPGLeveling extends JavaPlugin {
             econ = economyProvider.getProvider();
         }
     }
-
+    
     public enum Type {
-
+        
         PERMISSION, ITEM_UNLOCK, MONEY;
     }
 }

@@ -8,6 +8,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 /**
@@ -18,14 +19,25 @@ public class Classe {
 
     private final RPGLeveling pl;
     private final String name, leveling;
+    private List<Integer> broadcastLevels = new ArrayList();
+    private Map<EntityType, Integer> killgain = new HashMap();
+    private Map<Material, Integer> breakgain = new HashMap();
+    private Map<Material, Integer> placegain = new HashMap();
+    private Map<Material, Integer> smeltgain = new HashMap();
     private Map<Integer, ItemReward> itemRewards = new HashMap();
     private Map<Integer, PermReward> permRewards = new HashMap();
     private Map<Integer, MoneyReward> moneyRewards = new HashMap();
 
-    public Classe(RPGLeveling pl, String name, String leveling, List<String> reward) {
+    public Classe(RPGLeveling pl, String name, String leveling, List<String> broadcastLv, List<String> reward, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
         this.pl = pl;
         this.name = name;
         this.leveling = leveling;
+        for (String s : broadcastLv) {
+            try {
+                broadcastLevels.add(Integer.parseInt(s));
+            } catch (NumberFormatException e) {
+            }
+        }
         for (String s : reward) {
             String[] s1 = s.split(";");
             if (s1[1].startsWith("i")) {
@@ -36,6 +48,50 @@ public class Classe {
                 permRewards.put(Integer.parseInt(s1[0]), new PermReward(s1[2]));
             }
         }
+        for (Map.Entry<String, Integer> set : killg.entrySet()) {
+            for (EntityType et : EntityType.values()) {
+                if (et.toString().equalsIgnoreCase(set.getKey())) {
+                    this.killgain.put(et, set.getValue());
+                }
+            }
+        }
+        for (Map.Entry<String, Integer> set : breakg.entrySet()) {
+            this.breakgain.put(pl.getMatFromString(set.getKey()), set.getValue());
+        }
+        for (Map.Entry<String, Integer> set : placeg.entrySet()) {
+            this.placegain.put(pl.getMatFromString(set.getKey()), set.getValue());
+        }
+        for (Map.Entry<String, Integer> set : smeltg.entrySet()) {
+            this.smeltgain.put(pl.getMatFromString(set.getKey()), set.getValue());
+        }
+    }
+
+    public int getGain(EntityType et) {
+        if (killgain.containsKey(et)) {
+            return killgain.get(et);
+        }
+        return 0;
+    }
+
+    public int getBreakGain(Material mat) {
+        if (breakgain.containsKey(mat)) {
+            return breakgain.get(mat);
+        }
+        return 0;
+    }
+
+    public int getPlaceGain(Material mat) {
+        if (placegain.containsKey(mat)) {
+            return placegain.get(mat);
+        }
+        return 0;
+    }
+    
+    public int getSmeltGain(Material mat) {
+        if (smeltgain.containsKey(mat)) {
+            return smeltgain.get(mat);
+        }
+        return 0;
     }
 
     public List<Material> getProibido() {
@@ -50,6 +106,14 @@ public class Classe {
         return name;
     }
 
+    public void retriveItemReward(Jogador j) {
+        for (int i = 0; i <= j.getLevel(); i++) {
+            if (itemRewards.containsKey(i)) {
+                itemRewards.get(i).giveReward(j);
+            }
+        }
+    }
+
     public void giveReward(int level, Jogador j) {
         if (itemRewards.containsKey(level)) {
             itemRewards.get(level).giveReward(j);
@@ -58,19 +122,38 @@ public class Classe {
             permRewards.get(level).giveReward(j.getPlayer());
         }
         if (moneyRewards.containsKey(level)) {
-            moneyRewards.get(level).giveReward(j.getPlayer().getName());
+            moneyRewards.get(level).giveReward(j.getPlayer());
         }
     }
 
     public int getExpNeeded(int level) {
+        int lv = level;
+        if (lv < 1) {
+            lv = 1;
+        }
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
         int result = Integer.MAX_VALUE;
         try {
-            result = Integer.parseInt(engine.eval(leveling.replaceAll("%level", Integer.toString(level))).toString());
+            result = (int) Double.parseDouble(engine.eval(leveling.replaceAll("%level", Integer.toString(lv))).toString());
         } catch (ScriptException e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public List<Integer> getBroadcastLevels() {
+        return broadcastLevels;
+    }
+
+    public void addPlayer(Player p) {
+        if (pl.players.containsKey(p)) {
+            p.sendMessage(pl.getLang("alreadyOnOtherClass"));
+        } else {
+            Jogador j = new Jogador(pl, p, 0, 0, name);
+            pl.players.put(p, j);
+            pl.sql.insertPlayer(p.getName().toLowerCase(), 0, 0, name);
+            p.sendMessage(pl.getLang("youJoinedClass").replaceAll("%name", name));
+        }
     }
 
     private class ItemReward {
@@ -83,6 +166,7 @@ public class Classe {
 
         public void giveReward(Jogador j) {
             j.addItemPerm(reward);
+            j.getPlayer().sendMessage(pl.getLang("youNowCanUse").replaceAll("%material", reward.toString().toLowerCase().replaceAll("_", " ")));
         }
 
         private Material getReward() {
@@ -100,6 +184,7 @@ public class Classe {
 
         public void giveReward(Player p) {
             pl.perm.playerAdd(p, reward);
+            p.sendMessage(pl.getLang("youGainedAPermission"));
         }
     }
 
@@ -111,8 +196,9 @@ public class Classe {
             this.reward = Double.parseDouble(s);
         }
 
-        public void giveReward(String p) {
-            pl.econ.bankDeposit(p, reward);
+        public void giveReward(Player p) {
+            pl.econ.bankDeposit(p.getName(), reward);
+            p.sendMessage(pl.getLang("youGainedMoney").replaceAll("%money", Double.toString(reward)));
         }
     }
 }

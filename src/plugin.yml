@@ -4,9 +4,11 @@ author: rfsantos1996
 main: com.jabyftw.rpglv.RPGLeveling
 description: RPG like level and unlocking of items
 permissions:
-   rpglevel.:
-     description: 
+   rpglevel.join:
+     description: Allow you to join a class.
      default: true
-   nodropondeath.restore:
-     description: On respawn, will gain have his items
-     default: op
+commands:
+   class:
+     description: Join a class
+     permission: rpglevel.join
+     usage: Use /class (name/list/exit)
