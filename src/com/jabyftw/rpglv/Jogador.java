@@ -2,7 +2,6 @@ package com.jabyftw.rpglv;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -15,6 +14,7 @@ public class Jogador {
     private final RPGLeveling pl;
     private final Player p;
     private int level, exp, expNeeded;
+    private List<String> permissions = new ArrayList();
     private Classe classe;
     private List<Material> allowedProibido = new ArrayList();
 
@@ -98,6 +98,16 @@ public class Jogador {
             p.setExp((exp * 1.0F / expNeeded * 1.0F));
         } else {
             p.setExp(0);
+        }
+    }
+
+    public void addPerm(String reward) {
+        permissions.add(reward);
+    }
+
+    public void removeAllPermissions() {
+        for (String s : permissions) {
+            pl.perm.playerRemove(p, s);
         }
     }
 }

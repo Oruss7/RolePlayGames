@@ -112,7 +112,7 @@ public class Classe {
                 itemRewards.get(i).giveReward(j, false);
             }
             if (permRewards.containsKey(i)) {
-                permRewards.get(i).giveReward(j.getPlayer(), false);
+                permRewards.get(i).giveReward(j, false);
             }
         }
     }
@@ -122,7 +122,7 @@ public class Classe {
             itemRewards.get(level).giveReward(j, true);
         }
         if (permRewards.containsKey(level)) {
-            permRewards.get(level).giveReward(j.getPlayer(), true);
+            permRewards.get(level).giveReward(j, true);
         }
         if (moneyRewards.containsKey(level)) {
             moneyRewards.get(level).giveReward(j.getPlayer());
@@ -187,10 +187,11 @@ public class Classe {
             this.reward = s;
         }
 
-        public void giveReward(Player p, boolean announce) {
-            if (pl.perm.playerAdd(p, reward)) {
+        public void giveReward(Jogador j, boolean announce) {
+            j.addPerm(reward);
+            if (pl.perm.playerAdd(j.getPlayer(), reward)) {
                 if (announce) {
-                    p.sendMessage(pl.getLang("youGainedAPermission"));
+                    j.getPlayer().sendMessage(pl.getLang("youGainedAPermission"));
                 }
             }
         }

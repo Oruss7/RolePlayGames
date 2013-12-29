@@ -36,6 +36,7 @@ public class RPGExecutor implements CommandExecutor {
                             p.setExp(0);
                             p.setLevel(0);
                             p.sendMessage(pl.getLang("youLeftClass").replaceAll("%name", pl.players.get(p).getClasse().getName()));
+                            pl.players.get(p).removeAllPermissions();
                             pl.players.remove(p);
                             return true;
                         } else {
