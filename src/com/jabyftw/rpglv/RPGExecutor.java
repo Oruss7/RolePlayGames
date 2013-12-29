@@ -29,7 +29,7 @@ public class RPGExecutor implements CommandExecutor {
                 return false;
             } else {
                 if (args[0].equalsIgnoreCase("kick")) {
-                    if (args.length > 2) { // rpg kick (name)
+                    if (args.length > 1) { // rpg kick (name)
                         Player p = pl.getServer().getPlayer(args[1]);
                         if (p != null && pl.players.containsKey(p)) {
                             pl.sql.deletePlayer(p.getName().toLowerCase());
@@ -52,7 +52,7 @@ public class RPGExecutor implements CommandExecutor {
                             Player p = (Player) sender;
                             if (pl.players.containsKey(p)) {
                                 try {
-                                    pl.players.get(p).addLevel(Integer.parseInt(args[1]), false);
+                                    pl.players.get(p).addLevel(Integer.parseInt(args[0]), false);
                                 } catch (NumberFormatException e) {
                                     return false;
                                 }
@@ -67,10 +67,10 @@ public class RPGExecutor implements CommandExecutor {
                             return true;
                         }
                     } else { // /rpg 3 jaby
-                        Player p = pl.getServer().getPlayer(args[2]);
+                        Player p = pl.getServer().getPlayer(args[1]);
                         if (p != null && pl.players.containsKey(p)) {
                             try {
-                                pl.players.get(p).addLevel(Integer.parseInt(args[1]), false);
+                                pl.players.get(p).addLevel(Integer.parseInt(args[0]), false);
                             } catch (NumberFormatException e) {
                                 return false;
                             }

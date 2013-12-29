@@ -70,7 +70,7 @@ public class Config {
             String[] smeltg = {"gold_ingot;3", "iron_ingot;3", "redstone;3", "stone;3", "glass;3", "coal;5", "brick;3", "hard_clay;3", "baked_potato;3", "cooked_beef;3", "cooked_chicken;3", "cooked_fish;3", "GRILLED_PORK;3", "ink_sack;3", "quartz;3"};
             classes.addDefault("classes.noob.smeltGain", Arrays.asList(smeltg));
             classes.addDefault("classes.noob.default", true);
-            classes.addDefault("classes.noob.levelingEquation", "100*(1.15^(%level-1))"); // Thanks phrstbrn and "Jobs"
+            classes.addDefault("classes.noob.levelingEquation", "100*(1.16^(%level-1))"); // Thanks phrstbrn and "Jobs"
             classesYML.saveCustomConfig();
         }
         for (String s : classes.getStringList("options.blockedItems")) {

@@ -3,6 +3,7 @@ package com.jabyftw.rpglv;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 /**
@@ -48,6 +49,9 @@ public class Jogador {
             addLevel(1, true);
         }// exp / exp needed
         sendStatsToPlayer();
+        if(experience > 2) {
+            p.playSound(p.getLocation(), Sound.ORB_PICKUP, 0.3F, 0);
+        }
     }
 
     public Player getPlayer() {
@@ -56,20 +60,21 @@ public class Jogador {
 
     public void addLevel(int added, boolean legit) {
         int plevel = level;
-        for (int i = 0; i <= added; i++) {
+        for (int i = 1; i <= added; i++) {
             plevel += i;
-            if (plevel > pl.maxLevel) {
-                plevel = pl.maxLevel;
+            if (plevel >= pl.maxLevel) {
+                level = pl.maxLevel;
             } else {
                 level = plevel;
+                expNeeded = classe.getExpNeeded(level);
             }
             sendStatsToPlayer();
             classe.giveReward(level, this);
-            if(legit) {
-            broadcastLevel(level);
+            if (legit) {
+                broadcastLevel(level);
             }
         }
-        expNeeded = classe.getExpNeeded(level);
+        p.playSound(p.getLocation(), Sound.LEVEL_UP, 1, 0);
         savePlayer();
     }
 

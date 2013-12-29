@@ -154,6 +154,8 @@ public class Classe {
         int lv = level;
         if (lv < 1) {
             lv = 1;
+        } else if (lv >= pl.maxLevel) {
+            return Integer.MAX_VALUE;
         }
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
         int result = Integer.MAX_VALUE;

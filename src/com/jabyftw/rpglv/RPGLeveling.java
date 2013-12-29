@@ -18,7 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * @author Rafael
  */
 public class RPGLeveling extends JavaPlugin {
-    
+
     public MySQL sql;
     public Config config;
     public FileConfiguration defConfig, lang;
@@ -30,7 +30,7 @@ public class RPGLeveling extends JavaPlugin {
     public Map<Player, Jogador> players = new HashMap();
     public Classe defaultClass;
     public List<Classe> classes = new ArrayList();
-    
+
     @Override
     public void onEnable() {
         config = new Config(this);
@@ -43,26 +43,29 @@ public class RPGLeveling extends JavaPlugin {
         getServer().getPluginCommand("rpg").setExecutor(new RPGExecutor(this));
         log("Registered commands, listeners and Vault!");
     }
-    
+
     @Override
     public void onDisable() {
+        for (Jogador j : players.values()) {
+            j.savePlayer();
+        }
         log("Disabled!");
     }
-    
+
     public void log(String msg) {
         getLogger().log(Level.INFO, msg);
     }
-    
+
     public void broadcast(String msg) {
         for (Player p : getServer().getOnlinePlayers()) {
             p.sendMessage(msg);
         }
     }
-    
+
     public String getLang(String path) {
         return lang.getString("lang." + path).replaceAll("&", "§");
     }
-    
+
     public Material getMatFromString(String s) {
         for (Material m : Material.values()) {
             if (m.toString().equalsIgnoreCase(s)) {
@@ -80,7 +83,7 @@ public class RPGLeveling extends JavaPlugin {
         }
         return Material.DIAMOND_SPADE;
     }
-    
+
     public Classe getClasse(String name) {
         for (Classe c : classes) {
             if (c.getName().equalsIgnoreCase(name)) {
@@ -88,9 +91,9 @@ public class RPGLeveling extends JavaPlugin {
             }
         }
         return defaultClass;
-        
+
     }
-    
+
     private void setupVault() {
         RegisteredServiceProvider<Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
         if (permissionProvider != null) {
@@ -101,9 +104,9 @@ public class RPGLeveling extends JavaPlugin {
             econ = economyProvider.getProvider();
         }
     }
-    
+
     public enum Type {
-        
+
         PERMISSION, ITEM_UNLOCK, MONEY;
     }
 }
