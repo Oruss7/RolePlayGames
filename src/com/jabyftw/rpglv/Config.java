@@ -56,7 +56,8 @@ public class Config {
         classes.addDefault("options.blockedItems", Arrays.asList(blocked));
         if (pl.defConfig.getBoolean("config.generateDefClassesYML")) {
             classes.addDefault("classes.noob.name", "Noob");
-            String[] rewards = {"10;permission;essentials.motd", "20;money;5000", "30;item_permission;diamond_sword"};
+            classes.addDefault("classes.noob.permissionToJoin", "rpglevel.join");
+            String[] rewards = {"10;permission;essentials.motd", "10;money;2500", "20;money;5000", "30;item_permission;diamond_sword"};
             classes.addDefault("classes.noob.rewards", Arrays.asList(rewards));
             String[] levels = {"10", "20", "30"};
             classes.addDefault("classes.noob.broadcastLevels", Arrays.asList(levels));
@@ -78,8 +79,9 @@ public class Config {
         for (String key : classes.getConfigurationSection("classes").getKeys(false)) {
             String name = classes.getString("classes." + key + ".name");
             String leveling = classes.getString("classes." + key + ".levelingEquation");
+            String permission = classes.getString("classes." + key + ".permissionToJoin");
             boolean defaultC = classes.getBoolean("classes." + key + ".default");
-            Classe c = new Classe(pl, name, leveling, classes.getStringList("classes." + key + ".broadcastLevels"), classes.getStringList("classes." + key + ".rewards"), getGains(classes.getStringList("classes." + key + ".killGain")), getGains(classes.getStringList("classes." + key + ".breakGain")), getGains(classes.getStringList("classes." + key + ".placeGain")), getGains(classes.getStringList("classes." + key + ".smeltGain")));
+            Classe c = new Classe(pl, name, leveling, permission, classes.getStringList("classes." + key + ".broadcastLevels"), classes.getStringList("classes." + key + ".rewards"), getGains(classes.getStringList("classes." + key + ".killGain")), getGains(classes.getStringList("classes." + key + ".breakGain")), getGains(classes.getStringList("classes." + key + ".placeGain")), getGains(classes.getStringList("classes." + key + ".smeltGain")));
             if (defaultC) {
                 pl.defaultClass = c;
             }
@@ -101,6 +103,7 @@ public class Config {
         lang.addDefault("lang.youJoinedClass", "&6You joined class &e%name&6!");
         lang.addDefault("lang.youLeftClass", "&4You left %name. &cYour stats has been deleted.");
         lang.addDefault("lang.noClass", "&cYou arent on any class.");
+        lang.addDefault("lang.playerArentOnAnyClass", "&cPlayer arent on any class.");
         langYML.saveCustomConfig();
     }
 

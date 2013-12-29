@@ -45,7 +45,7 @@ public class Jogador {
         this.exp += experience;
         while (exp >= expNeeded) { // 15 > 10
             exp = (exp - expNeeded); // 15 - 10 = 5
-            addLevel(1);
+            addLevel(1, true);
         }// exp / exp needed
         sendStatsToPlayer();
     }
@@ -54,17 +54,22 @@ public class Jogador {
         return p;
     }
 
-    public void addLevel(int added) {
-        int plevel = level + added; // prepared level = level + added
-        if (plevel > pl.maxLevel) {
-            level = pl.maxLevel; // if prepared level is greater than the max, set to the max
-        } else {
-            level = plevel; // else, use prepared level
+    public void addLevel(int added, boolean legit) {
+        int plevel = level;
+        for (int i = 0; i <= added; i++) {
+            plevel += i;
+            if (plevel > pl.maxLevel) {
+                plevel = pl.maxLevel;
+            } else {
+                level = plevel;
+            }
+            sendStatsToPlayer();
+            classe.giveReward(level, this);
+            if(legit) {
+            broadcastLevel(level);
+            }
         }
-        sendStatsToPlayer();
-        classe.giveReward(level, this);
         expNeeded = classe.getExpNeeded(level);
-        broadcastLevel(level);
         savePlayer();
     }
 

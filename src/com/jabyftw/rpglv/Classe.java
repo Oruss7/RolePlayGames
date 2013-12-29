@@ -8,6 +8,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
@@ -15,23 +16,25 @@ import org.bukkit.entity.Player;
  *
  * @author Rafael
  */
+@SuppressWarnings("FieldMayBeFinal") // this messages sucks
 public class Classe {
 
     private final RPGLeveling pl;
-    private final String name, leveling;
+    private final String name, leveling, permission;
     private List<Integer> broadcastLevels = new ArrayList();
     private Map<EntityType, Integer> killgain = new HashMap();
     private Map<Material, Integer> breakgain = new HashMap();
     private Map<Material, Integer> placegain = new HashMap();
     private Map<Material, Integer> smeltgain = new HashMap();
-    private Map<Integer, ItemReward> itemRewards = new HashMap();
-    private Map<Integer, PermReward> permRewards = new HashMap();
-    private Map<Integer, MoneyReward> moneyRewards = new HashMap();
+    private Map<ItemReward, Integer> itemRewards = new HashMap();
+    private Map<PermReward, Integer> permRewards = new HashMap();
+    private Map<MoneyReward, Integer> moneyRewards = new HashMap();
 
-    public Classe(RPGLeveling pl, String name, String leveling, List<String> broadcastLv, List<String> reward, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
+    public Classe(RPGLeveling pl, String name, String leveling, String permission, List<String> broadcastLv, List<String> reward, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
         this.pl = pl;
         this.name = name;
         this.leveling = leveling;
+        this.permission = permission.toLowerCase();
         for (String s : broadcastLv) {
             try {
                 broadcastLevels.add(Integer.parseInt(s));
@@ -41,11 +44,11 @@ public class Classe {
         for (String s : reward) {
             String[] s1 = s.split(";");
             if (s1[1].startsWith("i")) {
-                itemRewards.put(Integer.parseInt(s1[0]), new ItemReward(s1[2]));
+                itemRewards.put(new ItemReward(s1[2]), Integer.parseInt(s1[0]));
             } else if (s1[1].startsWith("m")) {
-                moneyRewards.put(Integer.parseInt(s1[0]), new MoneyReward(s1[2]));
+                moneyRewards.put(new MoneyReward(s1[2]), Integer.parseInt(s1[0]));
             } else {
-                permRewards.put(Integer.parseInt(s1[0]), new PermReward(s1[2]));
+                permRewards.put(new PermReward(s1[2]), Integer.parseInt(s1[0]));
             }
         }
         for (Map.Entry<String, Integer> set : killg.entrySet()) {
@@ -64,6 +67,14 @@ public class Classe {
         for (Map.Entry<String, Integer> set : smeltg.entrySet()) {
             this.smeltgain.put(pl.getMatFromString(set.getKey()), set.getValue());
         }
+    }
+
+    public boolean canJoin(Player p) {
+        return p.hasPermission(permission);
+    }
+
+    public boolean canJoin(CommandSender sender) {
+        return sender.hasPermission(permission);
     }
 
     public int getGain(EntityType et) {
@@ -96,7 +107,7 @@ public class Classe {
 
     public List<Material> getProibido() {
         List<Material> l = new ArrayList();
-        for (ItemReward ir : itemRewards.values()) {
+        for (ItemReward ir : itemRewards.keySet()) {
             l.add(ir.getReward());
         }
         return l;
@@ -108,24 +119,34 @@ public class Classe {
 
     public void retriveItemAndPermReward(Jogador j) {
         for (int i = 0; i <= j.getLevel(); i++) {
-            if (itemRewards.containsKey(i)) {
-                itemRewards.get(i).giveReward(j, false);
+            for (Map.Entry<ItemReward, Integer> set : itemRewards.entrySet()) {
+                if (set.getValue().equals(i)) {
+                    set.getKey().giveReward(j, false);
+                }
             }
-            if (permRewards.containsKey(i)) {
-                permRewards.get(i).giveReward(j, false);
+            for (Map.Entry<PermReward, Integer> set : permRewards.entrySet()) {
+                if (set.getValue().equals(i)) {
+                    set.getKey().giveReward(j, false);
+                }
             }
         }
     }
 
     public void giveReward(int level, Jogador j) {
-        if (itemRewards.containsKey(level)) {
-            itemRewards.get(level).giveReward(j, true);
+        for (Map.Entry<ItemReward, Integer> set : itemRewards.entrySet()) {
+            if (set.getValue().equals(level)) {
+                set.getKey().giveReward(j, true);
+            }
         }
-        if (permRewards.containsKey(level)) {
-            permRewards.get(level).giveReward(j, true);
+        for (Map.Entry<PermReward, Integer> set : permRewards.entrySet()) {
+            if (set.getValue().equals(level)) {
+                set.getKey().giveReward(j, true);
+            }
         }
-        if (moneyRewards.containsKey(level)) {
-            moneyRewards.get(level).giveReward(j.getPlayer());
+        for (Map.Entry<MoneyReward, Integer> set : moneyRewards.entrySet()) {
+            if (set.getValue().equals(level)) {
+                set.getKey().giveReward(j.getPlayer());
+            }
         }
     }
 

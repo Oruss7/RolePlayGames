@@ -39,13 +39,14 @@ public class RPGLeveling extends JavaPlugin {
         log("Loaded configuration!");
         setupVault();
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
-        getServer().getPluginCommand("class").setExecutor(new RPGExecutor(this));
+        getServer().getPluginCommand("class").setExecutor(new ClassExecutor(this));
+        getServer().getPluginCommand("rpg").setExecutor(new RPGExecutor(this));
         log("Registered commands, listeners and Vault!");
     }
     
     @Override
     public void onDisable() {
-        
+        log("Disabled!");
     }
     
     public void log(String msg) {

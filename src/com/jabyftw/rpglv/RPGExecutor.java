@@ -22,16 +22,16 @@ public class RPGExecutor implements CommandExecutor {
         this.pl = pl;
     }
 
-    @Override // /class (name/list/exit)
+    @Override // /rpg level/kick (player name) (number - level)
     public boolean onCommand(CommandSender sender, Command cmd, String lavel, String[] args) {
-        if (sender.hasPermission("rpglevel.join")) {
-            if (args.length < 1) {
+        if (sender.hasPermission("rpglevel.manager")) {
+            if (args.length < 1) { // rpg
                 return false;
             } else {
-                if (args[0].equalsIgnoreCase("exit")) {
-                    if (sender instanceof Player) {
-                        Player p = (Player) sender;
-                        if (pl.players.containsKey(p)) {
+                if (args[0].equalsIgnoreCase("kick")) {
+                    if (args.length > 2) { // rpg kick (name)
+                        Player p = pl.getServer().getPlayer(args[1]);
+                        if (p != null && pl.players.containsKey(p)) {
                             pl.sql.deletePlayer(p.getName().toLowerCase());
                             p.setExp(0);
                             p.setLevel(0);
@@ -40,26 +40,46 @@ public class RPGExecutor implements CommandExecutor {
                             pl.players.remove(p);
                             return true;
                         } else {
-                            p.sendMessage(pl.getLang("noClass"));
+                            sender.sendMessage(pl.getLang("playerArentOnAnyClass"));
                             return true;
                         }
                     } else {
-                        sender.sendMessage("Only ingame.");
-                        return true;
+                        return false;
                     }
-                } else if (args[0].equalsIgnoreCase("list")) {
-                    for (Classe c : pl.classes) {
-                        sender.sendMessage(pl.getLang("classList").replaceAll("%name", c.getName()).replaceAll("%exp", Double.toString(c.getExpNeeded(1))));
-                    }
-                    return true;
                 } else {
-                    if (sender instanceof Player) {
-                        String classe = args[0];
-                        pl.getClasse(classe).addPlayer(((Player) sender));
-                        return true;
-                    } else {
-                        sender.sendMessage("Only ingame.");
-                        return true;
+                    if (args.length < 2) { // /rpg 3
+                        if (sender instanceof Player) {
+                            Player p = (Player) sender;
+                            if (pl.players.containsKey(p)) {
+                                try {
+                                    pl.players.get(p).addLevel(Integer.parseInt(args[1]), false);
+                                } catch (NumberFormatException e) {
+                                    return false;
+                                }
+                                sender.sendMessage("§eDone!");
+                                return true;
+                            } else {
+                                sender.sendMessage(pl.getLang("noClass"));
+                                return true;
+                            }
+                        } else {
+                            sender.sendMessage("Only ingame.");
+                            return true;
+                        }
+                    } else { // /rpg 3 jaby
+                        Player p = pl.getServer().getPlayer(args[2]);
+                        if (p != null && pl.players.containsKey(p)) {
+                            try {
+                                pl.players.get(p).addLevel(Integer.parseInt(args[1]), false);
+                            } catch (NumberFormatException e) {
+                                return false;
+                            }
+                            sender.sendMessage("§eDone!");
+                            return true;
+                        } else {
+                            sender.sendMessage(pl.getLang("playerArentOnAnyClass"));
+                            return true;
+                        }
                     }
                 }
             }
