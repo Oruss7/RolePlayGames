@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
  *
  * @author Rafael
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class Jogador {
 
     private final RPGLeveling pl;
@@ -49,7 +50,7 @@ public class Jogador {
             addLevel(1, true);
         }// exp / exp needed
         sendStatsToPlayer();
-        if(experience > 2) {
+        if (experience > 0) {
             p.playSound(p.getLocation(), Sound.ORB_PICKUP, 0.3F, 0);
         }
     }

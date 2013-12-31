@@ -9,6 +9,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
@@ -120,13 +121,21 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent e) {
+        e.setKeepLevel(true);
+        e.setDroppedExp(0);
+    }
+
+    @EventHandler
     public void onEntityDeath(EntityDeathEvent e) {
+        if (e.getEntity() instanceof Player) {
+            e.setDroppedExp(0);
+        }
         Player killer = e.getEntity().getKiller();
         if (killer != null) {
             if (pl.players.containsKey(killer)) {
                 Jogador j = pl.players.get(killer);
                 j.addExp(j.getClasse().getGain(e.getEntityType()));
-                e.setDroppedExp(0);
             }
         }
     }
@@ -161,7 +170,6 @@ public class PlayerListener implements Listener {
             }
             Jogador j = pl.players.get(p);
             j.addExp(j.getClasse().getBreakGain(e.getBlock().getType()));
-            e.setExpToDrop(0);
         }
     }
 
@@ -189,13 +197,13 @@ public class PlayerListener implements Listener {
         if (pl.players.containsKey(p)) {
             Jogador j = pl.players.get(p);
             j.addExp((j.getClasse().getSmeltGain(e.getItemType())) * e.getItemAmount());
-            e.setExpToDrop(0);
         }
     }
 
     @EventHandler
     public void onExp(PlayerExpChangeEvent e) {
-        if (pl.players.containsKey(e.getPlayer())) {
+        Player p = e.getPlayer();
+        if (pl.players.containsKey(p)) {
             e.setAmount(0);
         }
     }
