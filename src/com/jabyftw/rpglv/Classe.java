@@ -29,6 +29,7 @@ public class Classe {
     private Map<ItemReward, Integer> itemRewards = new HashMap();
     private Map<PermReward, Integer> permRewards = new HashMap();
     private Map<MoneyReward, Integer> moneyRewards = new HashMap();
+    private Map<RealLevelReward, Integer> realRewards = new HashMap();
 
     public Classe(RPGLeveling pl, String name, String leveling, String permission, List<String> broadcastLv, List<String> reward, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
         this.pl = pl;
@@ -47,6 +48,8 @@ public class Classe {
                 itemRewards.put(new ItemReward(s1[2]), Integer.parseInt(s1[0]));
             } else if (s1[1].startsWith("m")) {
                 moneyRewards.put(new MoneyReward(s1[2]), Integer.parseInt(s1[0]));
+            } else if (s1[1].startsWith("r")) {
+                realRewards.put(new RealLevelReward(s1[2]), Integer.parseInt(s1[0]));
             } else {
                 permRewards.put(new PermReward(s1[2]), Integer.parseInt(s1[0]));
             }
@@ -148,6 +151,11 @@ public class Classe {
                 set.getKey().giveReward(j.getPlayer());
             }
         }
+        for (Map.Entry<RealLevelReward, Integer> set : realRewards.entrySet()) {
+            if (set.getValue().equals(level)) {
+                set.getKey().giveReward(j);
+            }
+        }
     }
 
     public int getExpNeeded(int level) {
@@ -175,9 +183,9 @@ public class Classe {
         if (pl.players.containsKey(p)) {
             p.sendMessage(pl.getLang("alreadyOnOtherClass"));
         } else {
-            Jogador j = new Jogador(pl, p, 0, 0, name);
+            Jogador j = new Jogador(pl, p, 0, 0, 0, name);
             pl.players.put(p, j);
-            pl.sql.insertPlayer(p.getName().toLowerCase(), 0, 0, name);
+            pl.sql.insertPlayer(p.getName().toLowerCase(), 0, 0, 0, name);
             p.sendMessage(pl.getLang("youJoinedClass").replaceAll("%name", name));
         }
     }
@@ -231,6 +239,20 @@ public class Classe {
         public void giveReward(Player p) {
             pl.econ.bankDeposit(p.getName(), reward);
             p.sendMessage(pl.getLang("youGainedMoney").replaceAll("%money", Double.toString(reward)));
+        }
+    }
+
+    private class RealLevelReward {
+
+        private final int reward;
+
+        private RealLevelReward(String s) {
+            this.reward = Integer.parseInt(s);
+        }
+
+        public void giveReward(Jogador j) {
+            j.addRealLevel(reward);
+            j.getPlayer().sendMessage(pl.getLang("youGainedRealLevel").replaceAll("%gained", Integer.toString(reward)).replaceAll("%balance", Integer.toString(j.getRealLevel())));
         }
     }
 }

@@ -15,15 +15,16 @@ public class Jogador {
 
     private final RPGLeveling pl;
     private final Player p;
-    private int level, exp, expNeeded;
+    private int level, exp, expNeeded, reallevel;
     private List<String> permissions = new ArrayList();
     private Classe classe;
     private List<Material> allowedProibido = new ArrayList();
 
-    public Jogador(RPGLeveling pl, Player p, int level, int exp, String clas) {
+    public Jogador(RPGLeveling pl, Player p, int level, int exp, int reallevel, String clas) {
         this.pl = pl;
         this.p = p;
         this.level = level;
+        this.reallevel = reallevel;
         this.exp = exp;
         classe = pl.getClasse(clas);
         expNeeded = classe.getExpNeeded(level);
@@ -41,6 +42,14 @@ public class Jogador {
 
     public int getExp() {
         return exp;
+    }
+
+    public int getRealLevel() {
+        return reallevel;
+    }
+
+    public void addRealLevel(int added) {
+        reallevel += added;
     }
 
     public void addExp(int experience) {
@@ -76,11 +85,15 @@ public class Jogador {
             }
         }
         p.playSound(p.getLocation(), Sound.LEVEL_UP, 1, 0);
-        savePlayer();
+        savePlayer(true);
     }
 
-    public void savePlayer() {
-        pl.sql.updatePlayer(p.getName().toLowerCase(), level, exp, classe.getName());
+    public void savePlayer(boolean async) {
+        if (async) {
+            pl.sql.updatePlayer(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
+        } else {
+            pl.sql.updatePlayerSync(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
+        }
     }
 
     public List<Material> getItemRewardsAllowed() {

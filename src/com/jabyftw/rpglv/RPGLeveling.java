@@ -47,7 +47,7 @@ public class RPGLeveling extends JavaPlugin {
     @Override
     public void onDisable() {
         for (Jogador j : players.values()) {
-            j.savePlayer();
+            j.savePlayer(false);
         }
         log("Disabled!");
     }

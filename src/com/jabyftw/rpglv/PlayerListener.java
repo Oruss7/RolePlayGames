@@ -1,17 +1,20 @@
 package com.jabyftw.rpglv;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -20,6 +23,11 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.EnchantingInventory;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.Repairable;
 
 /**
  *
@@ -65,17 +73,45 @@ public class PlayerListener implements Listener {
             if (e.getCurrentItem() != null) {
                 if (pl.players.containsKey(p)) {
                     if (e.getInventory() instanceof AnvilInventory) {
-                        e.setCancelled(true);
+                        p.setLevel(999);
+                        AnvilInventory anvil = (AnvilInventory) e.getInventory();
+                        ItemStack i3 = anvil.getItem(2);
+                        if (i3 != null) {
+                            if (i3.getItemMeta() != null) {
+                                if (i3.getItemMeta() instanceof Repairable) {
+                                    Repairable r = (Repairable) i3.getItemMeta();
+                                    if (e.getSlot() == 2) {
+                                        if (pl.players.get(p).getRealLevel() >= r.getRepairCost()) {
+                                            pl.players.get(p).addRealLevel(-r.getRepairCost());
+                                            p.sendMessage(pl.getLang("realLevelUsedMessage").replaceAll("%balance", Integer.toString(pl.players.get(p).getRealLevel())).replaceAll("%cost", Integer.toString(r.getRepairCost())));
+                                        } else {
+                                            p.sendMessage(pl.getLang("noRealLevelsEnough").replaceAll("%balance", Integer.toString(pl.players.get(p).getRealLevel())).replaceAll("%cost", Integer.toString(r.getRepairCost())));
+                                            e.setCancelled(true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (e.getInventory() instanceof EnchantingInventory) {
+                        p.setLevel(999);
                     }
-                }
-                if (pl.proibido.contains(e.getCurrentItem().getType())) {
-                    if (pl.players.containsKey(p)) {
+                    if (pl.proibido.contains(e.getCurrentItem().getType())) {
                         if (!pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType())) {
                             p.sendMessage(pl.getLang("proibitedItem"));
                             e.setCancelled(true);
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onClose(InventoryCloseEvent e) {
+        if (e.getPlayer() instanceof Player) {
+            Player p = (Player) e.getPlayer();
+            if (pl.players.containsKey(p)) {
+                pl.players.get(p).sendStatsToPlayer();
             }
         }
     }
@@ -128,14 +164,12 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent e) {
-        if (e.getEntity() instanceof Player) {
-            e.setDroppedExp(0);
-        }
         Player killer = e.getEntity().getKiller();
         if (killer != null) {
             if (pl.players.containsKey(killer)) {
                 Jogador j = pl.players.get(killer);
                 j.addExp(j.getClasse().getGain(e.getEntityType()));
+                e.setDroppedExp(0);
             }
         }
     }
@@ -170,6 +204,7 @@ public class PlayerListener implements Listener {
             }
             Jogador j = pl.players.get(p);
             j.addExp(j.getClasse().getBreakGain(e.getBlock().getType()));
+            e.setExpToDrop(0);
         }
     }
 
@@ -197,6 +232,7 @@ public class PlayerListener implements Listener {
         if (pl.players.containsKey(p)) {
             Jogador j = pl.players.get(p);
             j.addExp((j.getClasse().getSmeltGain(e.getItemType())) * e.getItemAmount());
+            e.setExpToDrop(0);
         }
     }
 
@@ -209,15 +245,23 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
-    public void onEnchant(PrepareItemEnchantEvent e) {
-        if (pl.players.containsKey(e.getEnchanter())) {
-            e.setCancelled(true);
+    public void onEnchant(EnchantItemEvent e) {
+        Player p = e.getEnchanter();
+        if (pl.players.containsKey(p)) {
+            Jogador j = pl.players.get(p);
+            if (j.getRealLevel() >= e.getExpLevelCost()) {
+                j.addRealLevel(-e.getExpLevelCost());
+                p.sendMessage(pl.getLang("realLevelUsedMessage").replaceAll("%balance", Integer.toString(pl.players.get(p).getRealLevel())).replaceAll("%cost", Integer.toString(e.getExpLevelCost())));
+            } else {
+                p.sendMessage(pl.getLang("noRealLevelsEnough").replaceAll("%balance", Integer.toString(pl.players.get(p).getRealLevel())).replaceAll("%cost", Integer.toString(e.getExpLevelCost())));
+                e.setCancelled(true);
+            }
         }
     }
 
     private void save(Player p) {
         if (pl.players.containsKey(p)) {
-            pl.players.get(p).savePlayer();
+            pl.players.get(p).savePlayer(true);
             pl.players.remove(p);
         }
     }

@@ -57,7 +57,7 @@ public class Config {
         if (pl.defConfig.getBoolean("config.generateDefClassesYML")) {
             classes.addDefault("classes.noob.name", "Noob");
             classes.addDefault("classes.noob.permissionToJoin", "rpglevel.join");
-            String[] rewards = {"10;permission;essentials.motd", "10;money;2500", "20;money;5000", "30;item_permission;diamond_sword"};
+            String[] rewards = {"10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
             classes.addDefault("classes.noob.rewards", Arrays.asList(rewards));
             String[] levels = {"10", "20", "30"};
             classes.addDefault("classes.noob.broadcastLevels", Arrays.asList(levels));
@@ -97,6 +97,7 @@ public class Config {
         lang.addDefault("lang.youNowCanUse", "&6You can now use &e%material&6!");
         lang.addDefault("lang.youGainedAPermission", "&6You've received a new permission!");
         lang.addDefault("lang.youGainedMoney", "&6You've received &e%money &6money!");
+        lang.addDefault("lang.youGainedRealLevel", "&6You received &e%gained &6real levels to use. You have &e%balance &6now.");
         lang.addDefault("lang.noPermission", "&cNo permission.");
         lang.addDefault("lang.classList", "&6Name: &e%name &6| First level exp needed: &e%exp");
         lang.addDefault("lang.alreadyOnOtherClass", "&cAlready on other class.");
@@ -104,6 +105,8 @@ public class Config {
         lang.addDefault("lang.youLeftClass", "&4You left %name. &cYour stats has been deleted.");
         lang.addDefault("lang.noClass", "&cYou arent on any class.");
         lang.addDefault("lang.playerArentOnAnyClass", "&cPlayer arent on any class.");
+        lang.addDefault("lang.realLevelUsedMessage", "&6You used %cost real level(s). You have now &e%balance&6 real levels.");
+        lang.addDefault("lang.noRealLevelsEnough", "&cYou dont have enough real levels. You have &4%balance&c and it costs &4%cost&c.");
         langYML.saveCustomConfig();
     }
 
