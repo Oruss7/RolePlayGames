@@ -37,7 +37,7 @@ public class PlayerListener implements Listener {
         this.pl = pl;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true) // last when checking player join
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
         final String name = p.getName().toLowerCase();
