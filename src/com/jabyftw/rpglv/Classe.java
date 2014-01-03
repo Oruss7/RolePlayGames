@@ -8,6 +8,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -220,10 +221,11 @@ public class Classe {
 
         public void giveReward(Jogador j, boolean announce) {
             j.addPerm(reward);
-            if (pl.perm.playerAdd(j.getPlayer(), reward)) {
-                if (announce) {
-                    j.getPlayer().sendMessage(pl.getLang("youGainedAPermission"));
-                }
+            if (announce) {
+                j.getPlayer().sendMessage(pl.getLang("youGainedAPermission"));
+            }
+            for (World w : pl.getServer().getWorlds()) {
+                pl.perm.playerAdd(w, j.getPlayer().getName(), reward);
             }
         }
     }
