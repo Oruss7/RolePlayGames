@@ -2,6 +2,7 @@ package com.jabyftw.rpglv;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -85,6 +86,7 @@ public class Jogador {
             }
         }
         p.playSound(p.getLocation(), Sound.LEVEL_UP, 1, 0);
+        p.getWorld().playEffect(p.getLocation(), Effect.STEP_SOUND, 18);
         savePlayer(true);
     }
 
