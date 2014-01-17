@@ -6,6 +6,8 @@ import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 /**
  *
@@ -16,16 +18,17 @@ public class Jogador {
 
     private final RPGLeveling pl;
     private final Player p;
-    private int level, exp, expNeeded, reallevel;
+    private int level, exp, expNeeded, reallevel, bonushp;
     private List<String> permissions = new ArrayList();
     private Classe classe;
     private List<Material> allowedProibido = new ArrayList();
 
-    public Jogador(RPGLeveling pl, Player p, int level, int exp, int reallevel, String clas) {
+    public Jogador(RPGLeveling pl, Player p, int level, int exp, int reallevel, int bonushp, String clas) {
         this.pl = pl;
         this.p = p;
         this.level = level;
         this.reallevel = reallevel;
+        this.bonushp = bonushp;
         this.exp = exp;
         classe = pl.getClasse(clas);
         expNeeded = classe.getExpNeeded(level);
@@ -92,9 +95,9 @@ public class Jogador {
 
     public void savePlayer(boolean async) {
         if (async) {
-            pl.sql.updatePlayer(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
+            pl.sql.updatePlayer(p.getName().toLowerCase(), level, exp, reallevel, bonushp, classe.getName());
         } else {
-            pl.sql.updatePlayerSync(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
+            pl.sql.updatePlayerSync(p.getName().toLowerCase(), level, exp, reallevel, bonushp, classe.getName());
         }
     }
 
@@ -125,6 +128,9 @@ public class Jogador {
         } else {
             p.setExp(0);
         }
+        if (!p.hasPotionEffect(PotionEffectType.HEALTH_BOOST) && bonushp > 0) {
+            p.addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, Integer.MAX_VALUE, ((bonushp / 4) - 1))); // 4/4 = 1-1 = 0 ||| 8/4 = 2 - 1 = 1
+        }
     }
 
     public void addPerm(String reward) {
@@ -135,5 +141,9 @@ public class Jogador {
         for (String s : permissions) {
             pl.perm.playerRemove(p, s);
         }
+    }
+
+    public void addHealth(int reward) {
+        bonushp += reward;
     }
 }

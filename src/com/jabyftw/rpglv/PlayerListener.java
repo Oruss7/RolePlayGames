@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.AnvilInventory;
@@ -113,15 +114,13 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPickup(InventoryPickupItemEvent e) {
-        if (e.getInventory().getHolder() instanceof Player) {
-            Player p = (Player) e.getInventory().getHolder();
-            if (pl.proibido.contains(e.getItem().getItemStack().getType())) {
-                if (pl.players.containsKey(p)) {
-                    if (!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType())) {
-                        p.sendMessage(pl.getLang("proibitedItem"));
-                        e.setCancelled(true);
-                    }
+    public void onPickup(PlayerPickupItemEvent e) {
+        Player p = e.getPlayer();
+        if (pl.proibido.contains(e.getItem().getItemStack().getType())) {
+            if (pl.players.containsKey(p)) {
+                if (!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType())) {
+                    p.sendMessage(pl.getLang("proibitedItem"));
+                    e.setCancelled(true);
                 }
             }
         }

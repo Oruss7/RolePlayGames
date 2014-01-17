@@ -30,6 +30,7 @@ public class Classe {
     private Map<ItemReward, Integer> itemRewards = new HashMap();
     private Map<PermReward, Integer> permRewards = new HashMap();
     private Map<MoneyReward, Integer> moneyRewards = new HashMap();
+    private Map<HealthReward, Integer> healthRewards = new HashMap();
     private Map<RealLevelReward, Integer> realRewards = new HashMap();
 
     public Classe(RPGLeveling pl, String name, String leveling, String permission, List<String> broadcastLv, List<String> reward, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
@@ -51,7 +52,9 @@ public class Classe {
                 moneyRewards.put(new MoneyReward(s1[2]), Integer.parseInt(s1[0]));
             } else if (s1[1].startsWith("r")) {
                 realRewards.put(new RealLevelReward(s1[2]), Integer.parseInt(s1[0]));
-            } else {
+            } else if (s1[1].startsWith("r")) {
+                healthRewards.put(new HealthReward(s1[2]), Integer.parseInt(s1[0]));
+            } else { // "p"
                 permRewards.put(new PermReward(s1[2]), Integer.parseInt(s1[0]));
             }
         }
@@ -152,6 +155,11 @@ public class Classe {
                 set.getKey().giveReward(j.getPlayer());
             }
         }
+        for (Map.Entry<HealthReward, Integer> set : healthRewards.entrySet()) {
+            if (set.getValue().equals(level)) {
+                set.getKey().giveReward(j);
+            }
+        }
         for (Map.Entry<RealLevelReward, Integer> set : realRewards.entrySet()) {
             if (set.getValue().equals(level)) {
                 set.getKey().giveReward(j);
@@ -184,9 +192,9 @@ public class Classe {
         if (pl.players.containsKey(p)) {
             p.sendMessage(pl.getLang("alreadyOnOtherClass"));
         } else {
-            Jogador j = new Jogador(pl, p, 0, 0, 0, name);
+            Jogador j = new Jogador(pl, p, 0, 0, 0, 0, name);
             pl.players.put(p, j);
-            pl.sql.insertPlayer(p.getName().toLowerCase(), 0, 0, 0, name);
+            pl.sql.insertPlayer(p.getName().toLowerCase(), 0, 0, 0, 0, name);
             p.sendMessage(pl.getLang("youJoinedClass").replaceAll("%name", name));
         }
     }
@@ -241,6 +249,20 @@ public class Classe {
         public void giveReward(Player p) {
             pl.econ.bankDeposit(p.getName(), reward);
             p.sendMessage(pl.getLang("youGainedMoney").replaceAll("%money", Double.toString(reward)));
+        }
+    }
+
+    private class HealthReward {
+
+        private final int reward;
+
+        private HealthReward(String s) {
+            this.reward = (Integer.parseInt(s) * 4); // 1 = 2 hearts = 4 hp
+        }
+
+        public void giveReward(Jogador j) {
+            j.addHealth(reward);
+            j.getPlayer().sendMessage(pl.getLang("youGainedHealth").replaceAll("%health", Integer.toString((reward / 2))));
         }
     }
 
