@@ -52,7 +52,7 @@ public class Classe {
                 moneyRewards.put(new MoneyReward(s1[2]), Integer.parseInt(s1[0]));
             } else if (s1[1].startsWith("r")) {
                 realRewards.put(new RealLevelReward(s1[2]), Integer.parseInt(s1[0]));
-            } else if (s1[1].startsWith("r")) {
+            } else if (s1[1].startsWith("h")) {
                 healthRewards.put(new HealthReward(s1[2]), Integer.parseInt(s1[0]));
             } else { // "p"
                 permRewards.put(new PermReward(s1[2]), Integer.parseInt(s1[0]));
