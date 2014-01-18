@@ -57,8 +57,10 @@ public class Config {
         if (pl.defConfig.getBoolean("config.generateDefClassesYML")) {
             classes.addDefault("classes.noob.name", "Noob");
             classes.addDefault("classes.noob.permissionToJoin", "rpglevel.join");
-            String[] rewards = {"5;healthboost;1", "10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
+            String[] rewards = {"10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
             classes.addDefault("classes.noob.rewards", Arrays.asList(rewards));
+            String[] perewards = {"10|health_boost;1", "15|health_boost;2", "25|damage_resistance;1"};
+            classes.addDefault("classes.noob.potioneffects", Arrays.asList(perewards));
             String[] levels = {"10", "20", "30"};
             classes.addDefault("classes.noob.broadcastLevels", Arrays.asList(levels));
             String[] kgain = {"zombie;12", "player;20", "creeper;15", "cave_spider;18", "skeleton;14", "spider;12", "chicken;3", "cow;3", "horse;2", "bat;3", "ender_dragon;8001", "enderman;7", "silverfish;5", "mushroom_cow;5", "ocelot;3", "sheep;2", "slime;8", "squid;4", "witch;12", "wither;1200", "wolf;5", "pig;5", "pig_zombie;15", "magma_cube;18", "blaze;15"};
@@ -81,7 +83,7 @@ public class Config {
             String leveling = classes.getString("classes." + key + ".levelingEquation");
             String permission = classes.getString("classes." + key + ".permissionToJoin");
             boolean defaultC = classes.getBoolean("classes." + key + ".default");
-            Classe c = new Classe(pl, name, leveling, permission, classes.getStringList("classes." + key + ".broadcastLevels"), classes.getStringList("classes." + key + ".rewards"), getGains(classes.getStringList("classes." + key + ".killGain")), getGains(classes.getStringList("classes." + key + ".breakGain")), getGains(classes.getStringList("classes." + key + ".placeGain")), getGains(classes.getStringList("classes." + key + ".smeltGain")));
+            Classe c = new Classe(pl, name, leveling, permission, classes.getStringList("classes." + key + ".broadcastLevels"), classes.getStringList("classes." + key + ".rewards"), classes.getStringList("classes." + key + ".potioneffects"), getGains(classes.getStringList("classes." + key + ".killGain")), getGains(classes.getStringList("classes." + key + ".breakGain")), getGains(classes.getStringList("classes." + key + ".placeGain")), getGains(classes.getStringList("classes." + key + ".smeltGain")));
             if (defaultC) {
                 pl.defaultClass = c;
             }
@@ -97,7 +99,7 @@ public class Config {
         lang.addDefault("lang.youNowCanUse", "&6You can now use &e%material&6!");
         lang.addDefault("lang.youGainedAPermission", "&6You've received a new permission!");
         lang.addDefault("lang.youGainedMoney", "&6You've received &e%money &6money!");
-        lang.addDefault("lang.youGainedHealth", "&6You've received &e%health &6hearts!");
+        lang.addDefault("lang.youGainedPotionEffect", "&6You've received a constant &e%potioneffect&6!");
         lang.addDefault("lang.youGainedRealLevel", "&6You received &e%gained &6real levels to use. You have &e%balance &6now.");
         lang.addDefault("lang.noPermission", "&cNo permission.");
         lang.addDefault("lang.classList", "&6Name: &e%name &6| First level exp needed: &e%exp");

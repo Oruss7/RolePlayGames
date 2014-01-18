@@ -12,6 +12,8 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 /**
  *
@@ -30,10 +32,10 @@ public class Classe {
     private Map<ItemReward, Integer> itemRewards = new HashMap();
     private Map<PermReward, Integer> permRewards = new HashMap();
     private Map<MoneyReward, Integer> moneyRewards = new HashMap();
-    private Map<HealthReward, Integer> healthRewards = new HashMap();
+    private Map<PotionEffectsReward, Integer> potionRewards = new HashMap();
     private Map<RealLevelReward, Integer> realRewards = new HashMap();
 
-    public Classe(RPGLeveling pl, String name, String leveling, String permission, List<String> broadcastLv, List<String> reward, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
+    public Classe(RPGLeveling pl, String name, String leveling, String permission, List<String> broadcastLv, List<String> reward, List<String> potioneffects, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
         this.pl = pl;
         this.name = name;
         this.leveling = leveling;
@@ -52,8 +54,6 @@ public class Classe {
                 moneyRewards.put(new MoneyReward(s1[2]), Integer.parseInt(s1[0]));
             } else if (s1[1].startsWith("r")) {
                 realRewards.put(new RealLevelReward(s1[2]), Integer.parseInt(s1[0]));
-            } else if (s1[1].startsWith("h")) {
-                healthRewards.put(new HealthReward(s1[2]), Integer.parseInt(s1[0]));
             } else { // "p"
                 permRewards.put(new PermReward(s1[2]), Integer.parseInt(s1[0]));
             }
@@ -137,6 +137,17 @@ public class Classe {
                 }
             }
         }
+        retrivePotionEffects(j);
+    }
+
+    public void retrivePotionEffects(Jogador j) {
+        for (int i = 0; i <= j.getLevel(); i++) {
+            for (Map.Entry<PotionEffectsReward, Integer> set : potionRewards.entrySet()) {
+                if (set.getValue().equals(i)) {
+                    set.getKey().giveReward(j.getPlayer(), false);
+                }
+            }
+        }
     }
 
     public void giveReward(int level, Jogador j) {
@@ -155,9 +166,9 @@ public class Classe {
                 set.getKey().giveReward(j.getPlayer());
             }
         }
-        for (Map.Entry<HealthReward, Integer> set : healthRewards.entrySet()) {
+        for (Map.Entry<PotionEffectsReward, Integer> set : potionRewards.entrySet()) {
             if (set.getValue().equals(level)) {
-                set.getKey().giveReward(j);
+                set.getKey().giveReward(j.getPlayer(), true);
             }
         }
         for (Map.Entry<RealLevelReward, Integer> set : realRewards.entrySet()) {
@@ -192,9 +203,9 @@ public class Classe {
         if (pl.players.containsKey(p)) {
             p.sendMessage(pl.getLang("alreadyOnOtherClass"));
         } else {
-            Jogador j = new Jogador(pl, p, 0, 0, 0, 0, name);
+            Jogador j = new Jogador(pl, p, 0, 0, 0, name);
             pl.players.put(p, j);
-            pl.sql.insertPlayer(p.getName().toLowerCase(), 0, 0, 0, 0, name);
+            pl.sql.insertPlayer(p.getName().toLowerCase(), 0, 0, 0, name);
             p.sendMessage(pl.getLang("youJoinedClass").replaceAll("%name", name));
         }
     }
@@ -252,17 +263,23 @@ public class Classe {
         }
     }
 
-    private class HealthReward {
+    private class PotionEffectsReward {
 
-        private final int reward;
+        private final PotionEffect reward;
 
-        private HealthReward(String s) {
-            this.reward = (Integer.parseInt(s) * 4); // 1 = 2 hearts = 4 hp
+        private PotionEffectsReward(String s) {
+            String[] s1 = s.split(";");
+            this.reward = new PotionEffect(PotionEffectType.getByName(s1[0].toUpperCase()), Integer.MAX_VALUE, Integer.parseInt(s1[1]));
         }
 
-        public void giveReward(Jogador j) {
-            j.addHealth(reward);
-            j.getPlayer().sendMessage(pl.getLang("youGainedHealth").replaceAll("%health", Integer.toString((reward / 2))));
+        public void giveReward(Player p, boolean announce) {
+            if(p.hasPotionEffect(reward.getType())) {
+                p.removePotionEffect(reward.getType());
+            }
+            p.addPotionEffect(reward, false);
+            if (announce) {
+                p.sendMessage(pl.getLang("youGainedPotionEffect").replaceAll("%potioneffect", reward.getType().toString()));
+            }
         }
     }
 
