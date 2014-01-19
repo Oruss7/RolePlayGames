@@ -58,6 +58,10 @@ public class Classe {
                 permRewards.put(new PermReward(s1[2]), Integer.parseInt(s1[0]));
             }
         }
+        for(String s : potioneffects) {
+            String[] s1 = s.split("|");
+            this.potionRewards.put(new PotionEffectsReward(s1[1]), Integer.parseInt(s1[0]));
+        }
         for (Map.Entry<String, Integer> set : killg.entrySet()) {
             for (EntityType et : EntityType.values()) {
                 if (et.toString().equalsIgnoreCase(set.getKey())) {
