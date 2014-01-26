@@ -4,6 +4,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffectType;
 
 /**
  *
@@ -30,6 +31,9 @@ public class ClassExecutor implements CommandExecutor {
                             pl.sql.deletePlayer(p.getName().toLowerCase());
                             p.setExp(0);
                             p.setLevel(0);
+                            for (PotionEffectType pet : PotionEffectType.values()) {
+                                p.removePotionEffect(pet);
+                            }
                             p.sendMessage(pl.getLang("youLeftClass").replaceAll("%name", pl.players.get(p).getClasse().getName()));
                             pl.players.get(p).removeAllPermissions();
                             pl.players.remove(p);

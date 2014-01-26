@@ -57,7 +57,7 @@ public class Config {
         if (pl.defConfig.getBoolean("config.generateDefClassesYML")) {
             classes.addDefault("classes.noob.name", "Noob");
             classes.addDefault("classes.noob.permissionToJoin", "rpglevel.join");
-            String[] rewards = {"10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
+            String[] rewards = {"10;playercommand;motd", "10;consolecommand;tell %player% hello", "10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
             classes.addDefault("classes.noob.rewards", Arrays.asList(rewards));
             String[] perewards = {"10/health_boost;1", "15/health_boost;2", "25/damage_resistance;1"};
             classes.addDefault("classes.noob.potioneffects", Arrays.asList(perewards));

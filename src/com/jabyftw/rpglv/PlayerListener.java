@@ -13,7 +13,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -25,6 +24,7 @@ import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Repairable;
+import org.bukkit.potion.PotionEffectType;
 
 /**
  *
@@ -49,6 +49,10 @@ public class PlayerListener implements Listener {
                 Jogador j = pl.sql.getJogador(name);
                 if (j != null) {
                     pl.players.put(p, j);
+                } else {
+                    for (PotionEffectType pet : PotionEffectType.values()) {
+                        p.removePotionEffect(pet);
+                    }
                 }
             }
         });

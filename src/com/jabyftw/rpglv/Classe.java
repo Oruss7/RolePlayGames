@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -22,7 +21,7 @@ import org.bukkit.potion.PotionEffectType;
  */
 @SuppressWarnings("FieldMayBeFinal") // this messages sucks
 public class Classe {
-    
+
     private final RPGLeveling pl;
     private final String name, leveling, permission;
     private List<Integer> broadcastLevels = new ArrayList();
@@ -33,9 +32,10 @@ public class Classe {
     private Map<ItemReward, Integer> itemRewards = new HashMap();
     private Map<PermReward, Integer> permRewards = new HashMap();
     private Map<MoneyReward, Integer> moneyRewards = new HashMap();
+    private Map<CommandReward, Integer> commandRewards = new HashMap();
     private Map<PotionEffectsReward, Integer> potionRewards = new HashMap();
     private Map<RealLevelReward, Integer> realRewards = new HashMap();
-    
+
     public Classe(RPGLeveling pl, String name, String leveling, String permission, List<String> broadcastLv, List<String> reward, List<String> potioneffects, Map<String, Integer> killg, Map<String, Integer> breakg, Map<String, Integer> placeg, Map<String, Integer> smeltg) {
         this.pl = pl;
         this.name = name;
@@ -49,14 +49,18 @@ public class Classe {
         }
         for (String s : reward) {
             String[] s1 = s.split(";");
-            if (s1[1].startsWith("i")) {
+            if (s1[1].startsWith("i")) { // item
                 itemRewards.put(new ItemReward(s1[2]), Integer.parseInt(s1[0]));
-            } else if (s1[1].startsWith("m")) {
+            } else if (s1[1].startsWith("m")) { // money
                 moneyRewards.put(new MoneyReward(s1[2]), Integer.parseInt(s1[0]));
-            } else if (s1[1].startsWith("r")) {
+            } else if (s1[1].startsWith("r")) { // reallevel
                 realRewards.put(new RealLevelReward(s1[2]), Integer.parseInt(s1[0]));
-            } else { // "p"
+            } else if (s1[1].startsWith("pe")) { // playercommand
                 permRewards.put(new PermReward(s1[2]), Integer.parseInt(s1[0]));
+            } else if (s1[1].startsWith("c")) { // consolecommand
+                commandRewards.put(new CommandReward(s1[2], true), Integer.parseInt(s1[0]));
+            } else { // permission
+                commandRewards.put(new CommandReward(s1[2], false), Integer.parseInt(s1[0]));
             }
         }
         for (String s : potioneffects) {
@@ -80,43 +84,43 @@ public class Classe {
             this.smeltgain.put(pl.getMatFromString(set.getKey()), set.getValue());
         }
     }
-    
+
     public boolean canJoin(Player p) {
         return p.hasPermission(permission);
     }
-    
+
     public boolean canJoin(CommandSender sender) {
         return sender.hasPermission(permission);
     }
-    
+
     public int getGain(EntityType et) {
         if (killgain.containsKey(et)) {
             return killgain.get(et);
         }
         return 0;
     }
-    
+
     public int getBreakGain(Material mat) {
         if (breakgain.containsKey(mat)) {
             return breakgain.get(mat);
         }
         return 0;
     }
-    
+
     public int getPlaceGain(Material mat) {
         if (placegain.containsKey(mat)) {
             return placegain.get(mat);
         }
         return 0;
     }
-    
+
     public int getSmeltGain(Material mat) {
         if (smeltgain.containsKey(mat)) {
             return smeltgain.get(mat);
         }
         return 0;
     }
-    
+
     public List<Material> getProibido() {
         List<Material> l = new ArrayList();
         for (ItemReward ir : itemRewards.keySet()) {
@@ -124,11 +128,11 @@ public class Classe {
         }
         return l;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public void retriveItemAndPermReward(Jogador j) {
         for (int i = 0; i <= j.getLevel(); i++) {
             for (Map.Entry<ItemReward, Integer> set : itemRewards.entrySet()) {
@@ -144,7 +148,7 @@ public class Classe {
         }
         retrivePotionEffects(j);
     }
-    
+
     public void retrivePotionEffects(Jogador j) {
         for (int i = 0; i <= j.getLevel(); i++) {
             for (Map.Entry<PotionEffectsReward, Integer> set : potionRewards.entrySet()) {
@@ -154,7 +158,7 @@ public class Classe {
             }
         }
     }
-    
+
     public void giveReward(int level, Jogador j) {
         for (Map.Entry<ItemReward, Integer> set : itemRewards.entrySet()) {
             if (set.getValue().equals(level)) {
@@ -176,13 +180,18 @@ public class Classe {
                 set.getKey().giveReward(j.getPlayer(), true);
             }
         }
+        for (Map.Entry<CommandReward, Integer> set : commandRewards.entrySet()) {
+            if (set.getValue().equals(level)) {
+                set.getKey().giveReward(j.getPlayer());
+            }
+        }
         for (Map.Entry<RealLevelReward, Integer> set : realRewards.entrySet()) {
             if (set.getValue().equals(level)) {
                 set.getKey().giveReward(j);
             }
         }
     }
-    
+
     public int getExpNeeded(int level) {
         int lv = level;
         if (lv < 1) {
@@ -199,11 +208,11 @@ public class Classe {
         }
         return result;
     }
-    
+
     public List<Integer> getBroadcastLevels() {
         return broadcastLevels;
     }
-    
+
     public void addPlayer(Player p) {
         if (pl.players.containsKey(p)) {
             p.sendMessage(pl.getLang("alreadyOnOtherClass"));
@@ -214,35 +223,35 @@ public class Classe {
             p.sendMessage(pl.getLang("youJoinedClass").replaceAll("%name", name));
         }
     }
-    
+
     private class ItemReward {
-        
+
         private final Material reward;
-        
+
         private ItemReward(String s) {
             this.reward = pl.getMatFromString(s);
         }
-        
+
         public void giveReward(Jogador j, boolean announce) {
             j.addItemPerm(reward);
             if (announce) {
                 j.getPlayer().sendMessage(pl.getLang("youNowCanUse").replaceAll("%material", reward.toString().toLowerCase().replaceAll("_", " ")));
             }
         }
-        
+
         private Material getReward() {
             return reward;
         }
     }
-    
+
     private class PermReward {
-        
+
         private final String reward;
-        
+
         private PermReward(String s) {
             this.reward = s;
         }
-        
+
         public void giveReward(Jogador j, boolean announce) {
             j.addPerm(reward);
             if (announce) {
@@ -253,49 +262,68 @@ public class Classe {
             }
         }
     }
-    
+
     private class MoneyReward {
-        
+
         private final double reward;
-        
+
         private MoneyReward(String s) {
             this.reward = Double.parseDouble(s);
         }
-        
+
         public void giveReward(Player p) {
-            pl.econ.bankDeposit(p.getName(), reward);
-            p.sendMessage(pl.getLang("youGainedMoney").replaceAll("%money", Double.toString(reward)));
+            if (pl.econ.depositPlayer(p.getName(), reward).transactionSuccess()) {
+                p.sendMessage(pl.getLang("youGainedMoney").replaceAll("%money", Double.toString(reward)));
+            }
         }
     }
-    
+
     private class PotionEffectsReward {
-        
+
         private final PotionEffect reward;
-        
+
         private PotionEffectsReward(String s) {
             String[] s1 = s.split(";");
             this.reward = new PotionEffect(PotionEffectType.getByName(s1[0].toUpperCase()), Integer.MAX_VALUE, Integer.parseInt(s1[1]));
         }
-        
+
         public void giveReward(Player p, boolean announce) {
-            if (p.hasPotionEffect(reward.getType())) {
-                p.removePotionEffect(reward.getType());
-            }
-            p.addPotionEffect(reward, false);
-            if (announce) {
-                p.sendMessage(pl.getLang("youGainedPotionEffect").replaceAll("%potioneffect", reward.getType().toString()));
+            if (!p.hasPotionEffect(reward.getType())) {
+                p.addPotionEffect(reward, false);
+                if (announce) {
+                    p.sendMessage(pl.getLang("youGainedPotionEffect").replaceAll("%potioneffect", reward.getType().getName()));
+                }
             }
         }
     }
-    
+
+    private class CommandReward {
+
+        private final boolean useConsole;
+        private final String reward;
+
+        private CommandReward(String s, boolean useConsole) {
+            this.useConsole = useConsole;
+            this.reward = s;
+        }
+
+        public void giveReward(Player p) {
+            if (useConsole) {
+                pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), reward.replaceAll("%player%", p.getName()));
+            } else {
+                pl.getServer().dispatchCommand(p, reward.replaceAll("%player%", p.getName()));
+            }
+        }
+    }
+
     private class RealLevelReward {
-        
+
         private final int reward;
-        
+
         private RealLevelReward(String s) {
             this.reward = Integer.parseInt(s);
         }
-        
+
         public void giveReward(Jogador j) {
             j.addRealLevel(reward);
             j.getPlayer().sendMessage(pl.getLang("youGainedRealLevel").replaceAll("%gained", Integer.toString(reward)).replaceAll("%balance", Integer.toString(j.getRealLevel())));
