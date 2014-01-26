@@ -24,6 +24,7 @@ import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Repairable;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 /**
@@ -50,8 +51,8 @@ public class PlayerListener implements Listener {
                 if (j != null) {
                     pl.players.put(p, j);
                 } else {
-                    for (PotionEffectType pet : PotionEffectType.values()) {
-                        p.removePotionEffect(pet);
+                    for (PotionEffect pet : p.getActivePotionEffects()) {
+                        p.removePotionEffect(pet.getType());
                     }
                 }
             }
@@ -157,8 +158,11 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
-        e.setKeepLevel(true);
-        e.setDroppedExp(0);
+        Player p = e.getEntity();
+        if (pl.players.containsKey(p)) {
+            e.setKeepLevel(true);
+            e.setDroppedExp(0);
+        }
     }
 
     @EventHandler
