@@ -45,9 +45,11 @@ public class Config {
         config.addDefault("MySQL.url", "jdbc:mysql://localhost:3306/database");
         //config.addDefault("config.", false);
         config.addDefault("config.generateDefClassesYML", true);
+        config.addDefault("config.useEXPChangeEvent", false);
         config.addDefault("config.maxLevel", 30);
         configYML.saveCustomConfig();
         pl.maxLevel = config.getInt("config.maxLevel");
+        pl.useExp = config.getBoolean("config.useEXPChangeEvent");
         pl.sql = new MySQL(pl, config.getString("MySQL.username"), config.getString("MySQL.password"), config.getString("MySQL.url"));
     }
 

@@ -26,6 +26,7 @@ public class RPGLeveling extends JavaPlugin {
     public Economy econ = null;
     // RPG things
     public int maxLevel;
+    public boolean useExp;
     public List<Material> proibido = new ArrayList();
     public Map<Player, Jogador> players = new HashMap();
     public Classe defaultClass;

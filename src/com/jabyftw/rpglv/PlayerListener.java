@@ -25,26 +25,25 @@ import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 /**
  *
  * @author Rafael
  */
-public class PlayerListener implements Listener {
+public class PlayerListener implements Listener {// TODO: check proibited items by ID
 
     private final RPGLeveling pl;
-
+    
     public PlayerListener(RPGLeveling pl) {
         this.pl = pl;
     }
-
+    
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
         final String name = p.getName().toLowerCase();
         pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
-
+            
             @Override
             public void run() {
                 Jogador j = pl.sql.getJogador(name);
@@ -58,16 +57,16 @@ public class PlayerListener implements Listener {
             }
         });
     }
-
+    
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
         Player p = e.getPlayer();
         if (pl.players.containsKey(p)) {
             pl.players.get(p).sendStatsToPlayer();
-
+            
         }
     }
-
+    
     @EventHandler
     public void onItemMove(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
@@ -107,7 +106,7 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
+    
     @EventHandler
     public void onClose(InventoryCloseEvent e) {
         if (e.getPlayer() instanceof Player) {
@@ -117,7 +116,7 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
+    
     @EventHandler
     public void onPickup(PlayerPickupItemEvent e) {
         Player p = e.getPlayer();
@@ -130,7 +129,7 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
+    
     @EventHandler
     public void onIteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
@@ -145,17 +144,17 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
+    
     @EventHandler(ignoreCancelled = false)
     public void onQuit(PlayerQuitEvent e) {
         save(e.getPlayer());
     }
-
+    
     @EventHandler(ignoreCancelled = false)
     public void onKick(PlayerKickEvent e) {
         save(e.getPlayer());
     }
-
+    
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
         Player p = e.getEntity();
@@ -164,19 +163,26 @@ public class PlayerListener implements Listener {
             e.setDroppedExp(0);
         }
     }
-
+    
     @EventHandler
     public void onEntityDeath(EntityDeathEvent e) {
         Player killer = e.getEntity().getKiller();
         if (killer != null) {
             if (pl.players.containsKey(killer)) {
                 Jogador j = pl.players.get(killer);
-                j.addExp(j.getClasse().getGain(e.getEntityType()));
-                e.setDroppedExp(0);
+                if (pl.useExp) {
+                    int gain = j.getClasse().getGain(e.getEntityType());
+                    if (gain > 0) {
+                        e.setDroppedExp(gain);
+                    }
+                } else {
+                    j.addExp(j.getClasse().getGain(e.getEntityType()));
+                    e.setDroppedExp(0);
+                }
             }
         }
     }
-
+    
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
         if (e.getDamager() instanceof Player) {
@@ -191,7 +197,7 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
+    
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
@@ -210,7 +216,7 @@ public class PlayerListener implements Listener {
             e.setExpToDrop(0);
         }
     }
-
+    
     @EventHandler(ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
@@ -228,7 +234,7 @@ public class PlayerListener implements Listener {
             j.addExp(j.getClasse().getPlaceGain(e.getBlock().getType()));
         }
     }
-
+    
     @EventHandler
     public void onSmelt(FurnaceExtractEvent e) {
         Player p = e.getPlayer();
@@ -238,15 +244,20 @@ public class PlayerListener implements Listener {
             e.setExpToDrop(0);
         }
     }
-
+    
     @EventHandler
     public void onExp(PlayerExpChangeEvent e) {
         Player p = e.getPlayer();
         if (pl.players.containsKey(p)) {
-            e.setAmount(0);
+            if (pl.useExp) {
+                pl.players.get(p).addExp(e.getAmount());
+                e.setAmount(0);
+            } else {
+                e.setAmount(0);
+            }
         }
     }
-
+    
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
     public void onEnchant(EnchantItemEvent e) {
         Player p = e.getEnchanter();
@@ -261,7 +272,7 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
+    
     private void save(Player p) {
         if (pl.players.containsKey(p)) {
             pl.players.get(p).savePlayer(true);
