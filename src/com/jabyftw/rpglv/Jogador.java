@@ -7,6 +7,7 @@ import org.bukkit.Effect;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -17,14 +18,14 @@ import org.bukkit.inventory.meta.FireworkMeta;
  */
 @SuppressWarnings("FieldMayBeFinal")
 public class Jogador {
-    
+
     private final RPGLeveling pl;
     private final Player p;
     private int level, exp, expNeeded, reallevel;
     private List<String> permissions = new ArrayList();
     private Classe classe;
     private List<Material> allowedProibido = new ArrayList();
-    
+
     public Jogador(RPGLeveling pl, Player p, int level, int exp, int reallevel, String clas) {
         this.pl = pl;
         this.p = p;
@@ -36,27 +37,27 @@ public class Jogador {
         retriveItemAndPermReward();
         sendStatsToPlayer();
     }
-    
+
     public Classe getClasse() {
         return classe;
     }
-    
+
     public int getLevel() {
         return level;
     }
-    
+
     public int getExp() {
         return exp;
     }
-    
+
     public int getRealLevel() {
         return reallevel;
     }
-    
+
     public void addRealLevel(int added) {
         reallevel += added;
     }
-    
+
     public void addExp(int experience) {
         this.exp += experience;
         while (exp >= expNeeded) { // 15 > 10
@@ -68,11 +69,11 @@ public class Jogador {
             p.playSound(p.getLocation(), Sound.ORB_PICKUP, 0.3F, 0);
         }
     }
-    
+
     public Player getPlayer() {
         return p;
     }
-    
+
     public void addLevel(int added, boolean legit) {
         int plevel = level;
         for (int i = 1; i <= added; i++) {
@@ -97,7 +98,7 @@ public class Jogador {
         firework.setFireworkMeta(data);
         savePlayer(true);
     }
-    
+
     public void savePlayer(boolean async) {
         if (async) {
             pl.sql.updatePlayer(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
@@ -105,27 +106,27 @@ public class Jogador {
             pl.sql.updatePlayerSync(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
         }
     }
-    
+
     public List<Material> getItemRewardsAllowed() {
         return allowedProibido;
     }
-    
+
     public void addItemPerm(Material reward) {
         if (pl.proibido.contains(reward) && classe.getProibido().contains(reward)) { // if true && false, this item is proibited on other class and not disponible on this
             allowedProibido.add(reward);
         }
     }
-    
+
     private void broadcastLevel(int level) {
         if (classe.getBroadcastLevels().contains(level)) {
             pl.broadcast(pl.getLang("broadcastLevel").replaceAll("%name", p.getDisplayName()).replaceAll("%level", Integer.toString(level)).replaceAll("%class", classe.getName()));
         }
     }
-    
+
     private void retriveItemAndPermReward() {
         classe.retriveItemAndPermReward(this);
     }
-    
+
     public void sendStatsToPlayer() {
         p.setLevel(level);
         if (exp > 0) {
@@ -135,14 +136,16 @@ public class Jogador {
         }
         getClasse().retrivePotionEffects(this);
     }
-    
+
     public void addPerm(String reward) {
         permissions.add(reward);
     }
-    
+
     public void removeAllPermissions() {
         for (String s : permissions) {
-            pl.perm.playerRemove(p, s);
+            for (World w : pl.getServer().getWorlds()) {
+                pl.perm.playerRemove(w, p.getName(), s);
+            }
         }
     }
 }

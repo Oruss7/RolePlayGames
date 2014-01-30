@@ -259,6 +259,7 @@ public class Classe {
             }
             for (World w : pl.getServer().getWorlds()) {
                 pl.perm.playerAdd(w, j.getPlayer().getName(), reward);
+                j.addPerm(reward);
             }
         }
     }
