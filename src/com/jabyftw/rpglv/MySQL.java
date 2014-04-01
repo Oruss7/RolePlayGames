@@ -1,9 +1,14 @@
 package com.jabyftw.rpglv;
 
-import java.sql.*;
-import java.util.logging.Level;
 import org.bukkit.entity.Player;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+
+@SuppressWarnings("deprecation")
 public class MySQL {
 
     private final RPGLeveling pl;
@@ -18,13 +23,13 @@ public class MySQL {
     }
 
     public Connection getConn() {
-        if (conn != null) {
-            return conn;
-        }
         try {
+            if(conn != null && conn.isValid(60)) {
+                return conn;
+            }
             conn = DriverManager.getConnection(url, user, pass);
         } catch (SQLException e) {
-            pl.getLogger().log(Level.WARNING, "Couldn''t connect to MySQL: {0}", e.getMessage());
+            pl.getLogger().log(Level.WARNING, "Couldn't connect to MySQL: {0}", e.getMessage());
         }
         return conn;
     }
@@ -64,8 +69,8 @@ public class MySQL {
                         getConn().createStatement().executeUpdate("ALTER TABLE `rpgplayers` \n"
                                 + "ADD COLUMN `reallevel` INT NOT NULL DEFAULT 0 AFTER `exp`;");
                     }
-                } catch (NumberFormatException e) {
-                } catch (SQLException ex) {
+                } catch(NumberFormatException ignored) {
+                } catch(SQLException ignored) {
                 }
             }
         });

@@ -1,5 +1,8 @@
 package com.jabyftw.rpglv;
 
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,18 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 /**
- *
  * @author Rafael
  */
 public class Config {
 
     private final RPGLeveling pl;
-    private CustomConfig configYML, langYML, classesYML;
     public FileConfiguration classes;
+    private CustomConfig configYML, langYML, classesYML;
 
     public Config(RPGLeveling pl) {
         this.pl = pl;
@@ -56,7 +56,7 @@ public class Config {
     private void generateClasses() {
         String[] blocked = {"diamond_sword", "276"};
         classes.addDefault("options.blockedItems", Arrays.asList(blocked));
-        if (pl.defConfig.getBoolean("config.generateDefClassesYML")) {
+        if(pl.defConfig.getBoolean("config.generateDefClassesYML")) {
             classes.addDefault("classes.noob.name", "Noob");
             classes.addDefault("classes.noob.permissionToJoin", "rpglevel.join");
             String[] rewards = {"10;playercommand;motd", "10;consolecommand;tell %player% hello", "10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
@@ -77,16 +77,16 @@ public class Config {
             classes.addDefault("classes.noob.levelingEquation", "100*(1.16^(%level-1))"); // Thanks phrstbrn and "Jobs"
             classesYML.saveCustomConfig();
         }
-        for (String s : classes.getStringList("options.blockedItems")) {
+        for(String s : classes.getStringList("options.blockedItems")) {
             pl.proibido.add(pl.getMatFromString(s));
         }
-        for (String key : classes.getConfigurationSection("classes").getKeys(false)) {
+        for(String key : classes.getConfigurationSection("classes").getKeys(false)) {
             String name = classes.getString("classes." + key + ".name");
             String leveling = classes.getString("classes." + key + ".levelingEquation");
             String permission = classes.getString("classes." + key + ".permissionToJoin");
             boolean defaultC = classes.getBoolean("classes." + key + ".default");
             Classe c = new Classe(pl, name, leveling, permission, classes.getStringList("classes." + key + ".broadcastLevels"), classes.getStringList("classes." + key + ".rewards"), classes.getStringList("classes." + key + ".potioneffects"), getGains(classes.getStringList("classes." + key + ".killGain")), getGains(classes.getStringList("classes." + key + ".breakGain")), getGains(classes.getStringList("classes." + key + ".placeGain")), getGains(classes.getStringList("classes." + key + ".smeltGain")));
-            if (defaultC) {
+            if(defaultC) {
                 pl.defaultClass = c;
             }
             pl.classes.add(c);
@@ -104,6 +104,7 @@ public class Config {
         lang.addDefault("lang.youGainedPotionEffect", "&6You've received a constant &e%potioneffect&6!");
         lang.addDefault("lang.youGainedRealLevel", "&6You received &e%gained &6real levels to use. You have &e%balance &6now.");
         lang.addDefault("lang.noPermission", "&cNo permission.");
+        lang.addDefault("lang.expNeeded", "&6You are &c%exp&6/&c%needed&6.");
         lang.addDefault("lang.classList", "&6Name: &e%name &6| First level exp needed: &e%exp");
         lang.addDefault("lang.alreadyOnOtherClass", "&cAlready on other class.");
         lang.addDefault("lang.youJoinedClass", "&6You joined class &e%name&6!");
@@ -116,12 +117,12 @@ public class Config {
     }
 
     private Map<String, Integer> getGains(List<String> gains) {
-        Map<String, Integer> l = new HashMap();
-        for (String s : gains) {
+        Map<String, Integer> l = new HashMap<String, Integer>();
+        for(String s : gains) {
             String[] s1 = s.split(";");
             try {
                 l.put(s1[0], Integer.parseInt(s1[1]));
-            } catch (NumberFormatException e) {
+            } catch(NumberFormatException ignored) {
             }
         }
         return l;
@@ -138,33 +139,33 @@ public class Config {
         }
 
         public FileConfiguration getCustomConfig() {
-            if (fileConfig == null) {
+            if(fileConfig == null) {
                 reloadCustomConfig();
             }
             return fileConfig;
         }
 
         public void reloadCustomConfig() {
-            if (fileConfig == null) {
+            if(fileConfig == null) {
                 file = new File(pl.getDataFolder(), name + ".yml");
             }
             fileConfig = YamlConfiguration.loadConfiguration(file);
 
             InputStream defConfigStream = pl.getResource(name + ".yml");
-            if (defConfigStream != null) {
+            if(defConfigStream != null) {
                 YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
                 fileConfig.setDefaults(defConfig);
             }
         }
 
         public void saveCustomConfig() {
-            if (file == null) {
+            if(file == null) {
                 file = new File(pl.getDataFolder(), name + ".yml");
             }
             try {
                 getCustomConfig().options().copyDefaults(true);
                 getCustomConfig().save(file);
-            } catch (IOException ex) {
+            } catch(IOException ex) {
                 pl.getLogger().log(Level.WARNING, "Couldn't save .yml");
             }
         }

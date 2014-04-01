@@ -1,10 +1,5 @@
 package com.jabyftw.rpglv;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Material;
@@ -13,8 +8,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+
 /**
- *
  * @author Rafael
  */
 public class RPGLeveling extends JavaPlugin {
@@ -27,13 +27,14 @@ public class RPGLeveling extends JavaPlugin {
     // RPG things
     public int maxLevel;
     public boolean useExp;
-    public List<Material> proibido = new ArrayList();
-    public Map<Player, Jogador> players = new HashMap();
+    public List<Material> proibido = new ArrayList<Material>();
+    public Map<Player, Jogador> players = new HashMap<Player, Jogador>();
     public Classe defaultClass;
-    public List<Classe> classes = new ArrayList();
+    public List<Classe> classes = new ArrayList<Classe>();
 
     @Override
     public void onEnable() {
+        long start = System.currentTimeMillis();
         config = new Config(this);
         config.start();
         sql.createTable();
@@ -43,13 +44,15 @@ public class RPGLeveling extends JavaPlugin {
         getServer().getPluginCommand("class").setExecutor(new ClassExecutor(this));
         getServer().getPluginCommand("rpg").setExecutor(new RPGExecutor(this));
         log("Registered commands, listeners and Vault!");
+        log("Enabled in " + (System.currentTimeMillis() - start) + "ms.");
     }
 
     @Override
     public void onDisable() {
-        for (Jogador j : players.values()) {
+        for(Jogador j : players.values()) {
             j.savePlayer(false);
         }
+        sql.closeConn();
         log("Disabled!");
     }
 
@@ -58,7 +61,7 @@ public class RPGLeveling extends JavaPlugin {
     }
 
     public void broadcast(String msg) {
-        for (Player p : getServer().getOnlinePlayers()) {
+        for(Player p : getServer().getOnlinePlayers()) {
             p.sendMessage(msg);
         }
     }
@@ -67,27 +70,28 @@ public class RPGLeveling extends JavaPlugin {
         return lang.getString("lang." + path).replaceAll("&", "§");
     }
 
+    @SuppressWarnings("deprecation")
     public Material getMatFromString(String s) {
-        for (Material m : Material.values()) {
-            if (m.toString().equalsIgnoreCase(s)) {
+        for(Material m : Material.values()) {
+            if(m.toString().equalsIgnoreCase(s)) {
                 return m;
             }
         }
         try {
             int id = Integer.parseInt(s);
-            for (Material m : Material.values()) {
-                if (m.getId() == id) {
+            for(Material m : Material.values()) {
+                if(m.getId() == id) {
                     return m;
                 }
             }
-        } catch (NumberFormatException e) {
+        } catch(NumberFormatException ignored) {
         }
         return Material.DIAMOND_SPADE;
     }
 
     public Classe getClasse(String name) {
-        for (Classe c : classes) {
-            if (c.getName().equalsIgnoreCase(name)) {
+        for(Classe c : classes) {
+            if(c.getName().equalsIgnoreCase(name)) {
                 return c;
             }
         }
@@ -97,17 +101,12 @@ public class RPGLeveling extends JavaPlugin {
 
     private void setupVault() {
         RegisteredServiceProvider<Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
-        if (permissionProvider != null) {
+        if(permissionProvider != null) {
             perm = permissionProvider.getProvider();
         }
         RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if (economyProvider != null) {
+        if(economyProvider != null) {
             econ = economyProvider.getProvider();
         }
-    }
-
-    public enum Type {
-
-        PERMISSION, ITEM_UNLOCK, MONEY;
     }
 }

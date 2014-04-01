@@ -1,14 +1,33 @@
 name: RPGLeveling
-version: 0.6.2
+version: 0.6.3
 author: rfsantos1996
 main: com.jabyftw.rpglv.RPGLeveling
 description: RPG like level and unlocking of items
+softdepend: [Vault]
 permissions:
    rpglevel.join:
      description: Allow you to join a class.
      default: true
-   rpglevel.manager:
-     description: Allow you to manage player info.
+   rpglevel.exit:
+     description: Allow you to exit a class.
+     default: true
+   rpglevel.list:
+     description: Allow you to see class list.
+     default: true
+   rpglevel.expneeded:
+     description: Allow you to see exp needed.
+     default: true
+   rpglevel.bypass.itembanning:
+     description: Allow you to bypass item banning.
+     default: false
+   rpglevel.management.kick:
+     description: Allow you to kick players.
+     default: op
+   rpglevel.management.level:
+     description: Allow you to edit your own level.
+     default: op
+   rpglevel.management.level.other:
+     description: Allow you to edit other players' level.
      default: op
 commands:
    class:
@@ -18,4 +37,4 @@ commands:
    rpg:
      description: Change player values
      permission: rpglevel.manager
-     usage: Use /rpg (kick/level quantity) (player name)
+     usage: Use /rpg (kick/exp/level quantity) (player name)

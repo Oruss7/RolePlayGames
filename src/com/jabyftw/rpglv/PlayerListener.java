@@ -13,13 +13,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.player.PlayerExpChangeEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.ItemStack;
@@ -27,62 +21,63 @@ import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.potion.PotionEffect;
 
 /**
- *
  * @author Rafael
  */
-public class PlayerListener implements Listener {// TODO: check proibited items by ID
+@SuppressWarnings("UnusedDeclaration")
+public class PlayerListener implements Listener {
 
     private final RPGLeveling pl;
-    
+
     public PlayerListener(RPGLeveling pl) {
         this.pl = pl;
     }
-    
+
+    @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
         final String name = p.getName().toLowerCase();
         pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
-            
+
             @Override
             public void run() {
                 Jogador j = pl.sql.getJogador(name);
-                if (j != null) {
+                if(j != null) {
                     pl.players.put(p, j);
                 } else {
-                    for (PotionEffect pet : p.getActivePotionEffects()) {
+                    for(PotionEffect pet : p.getActivePotionEffects()) {
                         p.removePotionEffect(pet.getType());
                     }
                 }
             }
         });
     }
-    
+
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
+        if(pl.players.containsKey(p)) {
             pl.players.get(p).sendStatsToPlayer();
-            
+
         }
     }
-    
+
     @EventHandler
     public void onItemMove(InventoryClickEvent e) {
-        if (e.getWhoClicked() instanceof Player) {
+        if(e.getWhoClicked() instanceof Player) {
             Player p = (Player) e.getWhoClicked();
-            if (e.getCurrentItem() != null) {
-                if (pl.players.containsKey(p)) {
-                    if (e.getInventory() instanceof AnvilInventory) {
+            if(e.getCurrentItem() != null) {
+                if(pl.players.containsKey(p)) {
+                    if(e.getInventory() instanceof AnvilInventory) {
                         p.setLevel(999);
                         AnvilInventory anvil = (AnvilInventory) e.getInventory();
                         ItemStack i3 = anvil.getItem(2);
-                        if (i3 != null) {
-                            if (i3.getItemMeta() != null) {
-                                if (i3.getItemMeta() instanceof Repairable) {
+                        if(i3 != null) {
+                            if(i3.getItemMeta() != null) {
+                                if(i3.getItemMeta() instanceof Repairable) {
                                     Repairable r = (Repairable) i3.getItemMeta();
-                                    if (e.getSlot() == 2) {
-                                        if (pl.players.get(p).getRealLevel() >= r.getRepairCost()) {
+                                    if(e.getSlot() == 2) {
+                                        if(pl.players.get(p).getRealLevel() >= r.getRepairCost()) {
                                             pl.players.get(p).addRealLevel(-r.getRepairCost());
                                             p.sendMessage(pl.getLang("realLevelUsedMessage").replaceAll("%balance", Integer.toString(pl.players.get(p).getRealLevel())).replaceAll("%cost", Integer.toString(r.getRepairCost())));
                                         } else {
@@ -93,11 +88,13 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
                                 }
                             }
                         }
-                    } else if (e.getInventory() instanceof EnchantingInventory) {
+                    } else if(e.getInventory() instanceof EnchantingInventory) {
                         p.setLevel(999);
                     }
-                    if (pl.proibido.contains(e.getCurrentItem().getType())) {
-                        if (!pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType())) {
+                    if(pl.proibido.contains(e.getCurrentItem().getType())) {
+                        if(!pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                            p.getWorld().dropItemNaturally(p.getLocation(), e.getCurrentItem());
+                            p.getInventory().remove(e.getCurrentItem());
                             p.sendMessage(pl.getLang("proibitedItem"));
                             e.setCancelled(true);
                         }
@@ -106,37 +103,37 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             }
         }
     }
-    
+
     @EventHandler
     public void onClose(InventoryCloseEvent e) {
-        if (e.getPlayer() instanceof Player) {
+        if(e.getPlayer() instanceof Player) {
             Player p = (Player) e.getPlayer();
-            if (pl.players.containsKey(p)) {
+            if(pl.players.containsKey(p)) {
                 pl.players.get(p).sendStatsToPlayer();
             }
         }
     }
-    
+
     @EventHandler
     public void onPickup(PlayerPickupItemEvent e) {
         Player p = e.getPlayer();
-        if (pl.proibido.contains(e.getItem().getItemStack().getType())) {
-            if (pl.players.containsKey(p)) {
-                if (!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType())) {
+        if(pl.proibido.contains(e.getItem().getItemStack().getType())) {
+            if(pl.players.containsKey(p)) {
+                if(!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
                     p.sendMessage(pl.getLang("proibitedItem"));
                     e.setCancelled(true);
                 }
             }
         }
     }
-    
+
     @EventHandler
     public void onIteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
-        if (e.getItem() != null) {
-            if (pl.proibido.contains(e.getItem().getType())) {
-                if (pl.players.containsKey(p)) {
-                    if (!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getType())) {
+        if(e.getItem() != null) {
+            if(pl.proibido.contains(e.getItem().getType())) {
+                if(pl.players.containsKey(p)) {
+                    if(!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
                         p.sendMessage(pl.getLang("proibitedItem"));
                         e.setCancelled(true);
                     }
@@ -144,35 +141,35 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             }
         }
     }
-    
+
     @EventHandler(ignoreCancelled = false)
     public void onQuit(PlayerQuitEvent e) {
         save(e.getPlayer());
     }
-    
+
     @EventHandler(ignoreCancelled = false)
     public void onKick(PlayerKickEvent e) {
         save(e.getPlayer());
     }
-    
+
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
         Player p = e.getEntity();
-        if (pl.players.containsKey(p)) {
+        if(pl.players.containsKey(p)) {
             e.setKeepLevel(true);
             e.setDroppedExp(0);
         }
     }
-    
+
     @EventHandler
     public void onEntityDeath(EntityDeathEvent e) {
         Player killer = e.getEntity().getKiller();
-        if (killer != null) {
-            if (pl.players.containsKey(killer)) {
+        if(killer != null) {
+            if(pl.players.containsKey(killer)) {
                 Jogador j = pl.players.get(killer);
-                if (pl.useExp) {
+                if(pl.useExp) {
                     int gain = j.getClasse().getGain(e.getEntityType());
-                    if (gain > 0) {
+                    if(gain > 0) {
                         e.setDroppedExp(gain);
                     }
                 } else {
@@ -182,14 +179,14 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             }
         }
     }
-    
+
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player) {
+        if(e.getDamager() instanceof Player) {
             Player p = (Player) e.getDamager();
-            if (pl.proibido.contains(p.getItemInHand().getType())) {
-                if (pl.players.containsKey(p)) {
-                    if (!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType())) {
+            if(pl.proibido.contains(p.getItemInHand().getType())) {
+                if(pl.players.containsKey(p)) {
+                    if(!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
                         p.sendMessage(pl.getLang("proibitedItem"));
                         e.setCancelled(true);
                     }
@@ -197,18 +194,16 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             }
         }
     }
-    
+
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            if (pl.proibido.contains(p.getItemInHand().getType())) {
-                if (pl.players.containsKey(p)) {
-                    if (!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType())) {
-                        p.sendMessage(pl.getLang("proibitedItem"));
-                        e.setCancelled(true);
-                        return;
-                    }
+        if(pl.players.containsKey(p)) {
+            if(pl.proibido.contains(p.getItemInHand().getType())) {
+                if(!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                    p.sendMessage(pl.getLang("proibitedItem"));
+                    e.setCancelled(true);
+                    return;
                 }
             }
             Jogador j = pl.players.get(p);
@@ -216,14 +211,14 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             e.setExpToDrop(0);
         }
     }
-    
+
     @EventHandler(ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            if (pl.proibido.contains(p.getItemInHand().getType())) {
-                if (pl.players.containsKey(p)) {
-                    if (!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType())) {
+        if(pl.players.containsKey(p)) {
+            if(pl.proibido.contains(p.getItemInHand().getType())) {
+                if(pl.players.containsKey(p)) {
+                    if(!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
                         p.sendMessage(pl.getLang("proibitedItem"));
                         e.setCancelled(true);
                         return;
@@ -234,22 +229,22 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             j.addExp(j.getClasse().getPlaceGain(e.getBlock().getType()));
         }
     }
-    
+
     @EventHandler
     public void onSmelt(FurnaceExtractEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
+        if(pl.players.containsKey(p)) {
             Jogador j = pl.players.get(p);
             j.addExp((j.getClasse().getSmeltGain(e.getItemType())) * e.getItemAmount());
             e.setExpToDrop(0);
         }
     }
-    
+
     @EventHandler
     public void onExp(PlayerExpChangeEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            if (pl.useExp) {
+        if(pl.players.containsKey(p)) {
+            if(pl.useExp) {
                 pl.players.get(p).addExp(e.getAmount());
                 e.setAmount(0);
             } else {
@@ -257,13 +252,13 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             }
         }
     }
-    
+
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
     public void onEnchant(EnchantItemEvent e) {
         Player p = e.getEnchanter();
-        if (pl.players.containsKey(p)) {
+        if(pl.players.containsKey(p)) {
             Jogador j = pl.players.get(p);
-            if (j.getRealLevel() >= e.getExpLevelCost()) {
+            if(j.getRealLevel() >= e.getExpLevelCost()) {
                 j.addRealLevel(-e.getExpLevelCost());
                 p.sendMessage(pl.getLang("realLevelUsedMessage").replaceAll("%balance", Integer.toString(pl.players.get(p).getRealLevel())).replaceAll("%cost", Integer.toString(e.getExpLevelCost())));
             } else {
@@ -272,9 +267,9 @@ public class PlayerListener implements Listener {// TODO: check proibited items 
             }
         }
     }
-    
+
     private void save(Player p) {
-        if (pl.players.containsKey(p)) {
+        if(pl.players.containsKey(p)) {
             pl.players.get(p).savePlayer(true);
             pl.players.remove(p);
         }
