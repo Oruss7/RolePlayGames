@@ -1,5 +1,5 @@
 name: RPGLeveling
-version: 0.6.3
+version: 0.7
 author: rfsantos1996
 main: com.jabyftw.rpglv.RPGLeveling
 description: RPG like level and unlocking of items
@@ -28,6 +28,12 @@ permissions:
      default: op
    rpglevel.management.level.other:
      description: Allow you to edit other players' level.
+     default: op
+   rpglevel.management.reload:
+     description: Allow you to reload the plugin.
+     default: op
+   rpglevel.management.purge:
+     description: Allow you to purge database.
      default: op
 commands:
    class:

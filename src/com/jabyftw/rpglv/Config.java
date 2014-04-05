@@ -43,7 +43,6 @@ public class Config {
         config.addDefault("MySQL.username", "root");
         config.addDefault("MySQL.password", "pass");
         config.addDefault("MySQL.url", "jdbc:mysql://localhost:3306/database");
-        //config.addDefault("config.", false);
         config.addDefault("config.generateDefClassesYML", true);
         config.addDefault("config.useEXPChangeEvent", false);
         config.addDefault("config.maxLevel", 30);
@@ -110,6 +109,9 @@ public class Config {
         lang.addDefault("lang.youJoinedClass", "&6You joined class &e%name&6!");
         lang.addDefault("lang.youLeftClass", "&4You left %name. &cYour stats has been deleted.");
         lang.addDefault("lang.noClass", "&cYou arent on any class.");
+        lang.addDefault("lang.reloadSucceeded", "&aReload succeeded.");
+        lang.addDefault("lang.purgeSucceeded", "&aPurge succeeded.");
+        lang.addDefault("lang.failedToPurge", "&4Purge failed.");
         lang.addDefault("lang.playerArentOnAnyClass", "&cPlayer arent on any class.");
         lang.addDefault("lang.realLevelUsedMessage", "&6You used %cost real level(s). You have now &e%balance&6 real levels.");
         lang.addDefault("lang.noRealLevelsEnough", "&cYou dont have enough real levels. You have &4%balance&c and it costs &4%cost&c.");

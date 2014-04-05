@@ -3,10 +3,13 @@ package com.jabyftw.rpglv;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +33,7 @@ public class RPGLeveling extends JavaPlugin {
     public List<Material> proibido = new ArrayList<Material>();
     public Map<Player, Jogador> players = new HashMap<Player, Jogador>();
     public Classe defaultClass;
+    public PlayerListener playerListener;
     public List<Classe> classes = new ArrayList<Classe>();
 
     @Override
@@ -40,7 +44,8 @@ public class RPGLeveling extends JavaPlugin {
         sql.createTable();
         log("Loaded configuration!");
         setupVault();
-        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+        playerListener = new PlayerListener(this);
+        getServer().getPluginManager().registerEvents(playerListener, this);
         getServer().getPluginCommand("class").setExecutor(new ClassExecutor(this));
         getServer().getPluginCommand("rpg").setExecutor(new RPGExecutor(this));
         log("Registered commands, listeners and Vault!");
@@ -53,7 +58,44 @@ public class RPGLeveling extends JavaPlugin {
             j.savePlayer(false);
         }
         sql.closeConn();
+        getServer().getScheduler().cancelTasks(this);
         log("Disabled!");
+    }
+
+    public void onReload(CommandSender sender) {
+        onDisable();
+        players.clear();
+        proibido.clear();
+        classes.clear();
+        econ = null;
+        perm = null;
+        config = null;
+        sql = null;
+        defaultClass = null;
+        HandlerList.unregisterAll(this);
+        playerListener = null;
+        onEnable();
+        sender.sendMessage(getLang("reloadSucceeded"));
+        findPlayers();
+    }
+
+    public void findPlayers() {
+        for(final Player p : getServer().getOnlinePlayers()) {
+            //noinspection deprecation
+            getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    Jogador j = sql.getJogador(p.getName().toLowerCase());
+                    if(j != null) {
+                        players.put(p, j);
+                    } else {
+                        for(PotionEffect pet : p.getActivePotionEffects()) {
+                            p.removePotionEffect(pet.getType());
+                        }
+                    }
+                }
+            });
+        }
     }
 
     public void log(String msg) {

@@ -49,6 +49,28 @@ public class RPGExecutor implements CommandExecutor {
                     sender.sendMessage(pl.getLang("noPermission"));
                     return true;
                 }
+            } else if(args[0].equalsIgnoreCase("purge")) {
+                if(sender.hasPermission("rpglevel.management.purge")) {
+                    pl.players.clear();
+                    if(pl.sql.purgeDatabase()) {
+                        sender.sendMessage(pl.getLang("purgeSucceeded"));
+                    } else {
+                        sender.sendMessage(pl.getLang("failedToPurge"));
+                    }
+                    pl.findPlayers();
+                    return true;
+                } else {
+                    sender.sendMessage("noPermission");
+                    return true;
+                }
+            } else if(args[0].equalsIgnoreCase("reload")) {
+                if(sender.hasPermission("rpglevel.management.reload")) {
+                    pl.onReload(sender);
+                    return true;
+                } else {
+                    sender.sendMessage("noPermission");
+                    return true;
+                }
             } else if(args[0].equalsIgnoreCase("exp")) {
                 if(sender.hasPermission("rpglevel.expneeded")) {
                     if(sender instanceof Player) {

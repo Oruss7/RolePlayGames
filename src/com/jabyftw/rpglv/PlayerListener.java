@@ -19,6 +19,9 @@ import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.ArrayList;
 
 /**
  * @author Rafael
@@ -27,6 +30,7 @@ import org.bukkit.potion.PotionEffect;
 public class PlayerListener implements Listener {
 
     private final RPGLeveling pl;
+    private final ArrayList<String> cooldown = new ArrayList<String>();
 
     public PlayerListener(RPGLeveling pl) {
         this.pl = pl;
@@ -36,12 +40,11 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
-        final String name = p.getName().toLowerCase();
         pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
 
             @Override
             public void run() {
-                Jogador j = pl.sql.getJogador(name);
+                Jogador j = pl.sql.getJogador(p.getName().toLowerCase());
                 if(j != null) {
                     pl.players.put(p, j);
                 } else {
@@ -91,13 +94,11 @@ public class PlayerListener implements Listener {
                     } else if(e.getInventory() instanceof EnchantingInventory) {
                         p.setLevel(999);
                     }
-                    if(pl.proibido.contains(e.getCurrentItem().getType())) {
-                        if(!pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                            p.getWorld().dropItemNaturally(p.getLocation(), e.getCurrentItem());
-                            p.getInventory().remove(e.getCurrentItem());
-                            p.sendMessage(pl.getLang("proibitedItem"));
-                            e.setCancelled(true);
-                        }
+                    if(pl.proibido.contains(e.getCurrentItem().getType()) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                        p.getWorld().dropItemNaturally(p.getLocation(), e.getCurrentItem());
+                        p.getInventory().remove(e.getCurrentItem());
+                        p.sendMessage(pl.getLang("proibitedItem"));
+                        e.setCancelled(true);
                     }
                 }
             }
@@ -117,13 +118,13 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPickup(PlayerPickupItemEvent e) {
         Player p = e.getPlayer();
-        if(pl.proibido.contains(e.getItem().getItemStack().getType())) {
-            if(pl.players.containsKey(p)) {
-                if(!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                    p.sendMessage(pl.getLang("proibitedItem"));
-                    e.setCancelled(true);
-                }
+        if(pl.proibido.contains(e.getItem().getItemStack().getType()) && pl.players.containsKey(p) &&
+                !pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+            if(!cooldown.contains(p.getName())) {
+                p.sendMessage(pl.getLang("proibitedItem"));
+                addCooldown(p.getName(), 3);
             }
+            e.setCancelled(true);
         }
     }
 
@@ -131,13 +132,12 @@ public class PlayerListener implements Listener {
     public void onIteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         if(e.getItem() != null) {
-            if(pl.proibido.contains(e.getItem().getType())) {
-                if(pl.players.containsKey(p)) {
-                    if(!pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                        p.sendMessage(pl.getLang("proibitedItem"));
-                        e.setCancelled(true);
-                    }
+            if(pl.proibido.contains(e.getItem().getType()) && pl.players.containsKey(p) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                if(!cooldown.contains(p.getName())) {
+                    p.sendMessage(pl.getLang("proibitedItem"));
+                    addCooldown(p.getName(), 3);
                 }
+                e.setCancelled(true);
             }
         }
     }
@@ -184,13 +184,12 @@ public class PlayerListener implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
         if(e.getDamager() instanceof Player) {
             Player p = (Player) e.getDamager();
-            if(pl.proibido.contains(p.getItemInHand().getType())) {
-                if(pl.players.containsKey(p)) {
-                    if(!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                        p.sendMessage(pl.getLang("proibitedItem"));
-                        e.setCancelled(true);
-                    }
+            if(pl.proibido.contains(p.getItemInHand().getType()) && pl.players.containsKey(p) && !pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                if(!cooldown.contains(p.getName())) {
+                    p.sendMessage(pl.getLang("proibitedItem"));
+                    addCooldown(p.getName(), 3);
                 }
+                e.setCancelled(true);
             }
         }
     }
@@ -201,7 +200,10 @@ public class PlayerListener implements Listener {
         if(pl.players.containsKey(p)) {
             if(pl.proibido.contains(p.getItemInHand().getType())) {
                 if(!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                    p.sendMessage(pl.getLang("proibitedItem"));
+                    if(!cooldown.contains(p.getName())) {
+                        p.sendMessage(pl.getLang("proibitedItem"));
+                        addCooldown(p.getName(), 3);
+                    }
                     e.setCancelled(true);
                     return;
                 }
@@ -216,14 +218,14 @@ public class PlayerListener implements Listener {
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
         if(pl.players.containsKey(p)) {
-            if(pl.proibido.contains(p.getItemInHand().getType())) {
-                if(pl.players.containsKey(p)) {
-                    if(!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                        p.sendMessage(pl.getLang("proibitedItem"));
-                        e.setCancelled(true);
-                        return;
-                    }
+            if(pl.proibido.contains(p.getItemInHand().getType()) && pl.players.containsKey(p) &&
+                    !pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                if(!cooldown.contains(p.getName())) {
+                    p.sendMessage(pl.getLang("proibitedItem"));
+                    addCooldown(p.getName(), 3);
                 }
+                e.setCancelled(true);
+                return;
             }
             Jogador j = pl.players.get(p);
             j.addExp(j.getClasse().getPlaceGain(e.getBlock().getType()));
@@ -273,5 +275,15 @@ public class PlayerListener implements Listener {
             pl.players.get(p).savePlayer(true);
             pl.players.remove(p);
         }
+    }
+
+    public void addCooldown(final String player, int timeInSec) {
+        cooldown.add(player);
+        pl.getServer().getScheduler().scheduleSyncDelayedTask(pl, new BukkitRunnable() {
+            @Override
+            public void run() {
+                cooldown.remove(player);
+            }
+        }, timeInSec * 20);
     }
 }

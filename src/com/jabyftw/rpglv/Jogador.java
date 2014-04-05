@@ -6,18 +6,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Rafael
  */
-@SuppressWarnings("FieldMayBeFinal")
 public class Jogador {
 
     private final RPGLeveling pl;
     private final Player p;
-    private final List<String> permissions = new ArrayList<String>();
-    private final List<Material> allowedProibido = new ArrayList<Material>();
+    private final ArrayList<String> permissions = new ArrayList<String>();
+    private final ArrayList<Material> allowedProibido = new ArrayList<Material>();
     private final Classe classe;
     private int level, exp, expNeeded, reallevel;
 
@@ -106,7 +104,7 @@ public class Jogador {
         }
     }
 
-    public List<Material> getItemRewardsAllowed() {
+    public ArrayList<Material> getItemRewardsAllowed() {
         return allowedProibido;
     }
 
