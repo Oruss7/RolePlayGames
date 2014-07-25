@@ -22,7 +22,7 @@ public class RPGExecutor implements CommandExecutor {
     }
 
     @Override // /rpg level/kick (player name) (number - level)
-    public boolean onCommand(CommandSender sender, Command cmd, String lavel, String[] args) {
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if(args.length < 1) { // rpg
             return false;
         } else {
@@ -31,7 +31,7 @@ public class RPGExecutor implements CommandExecutor {
                     if(args.length > 1) { // rpg kick (name)
                         Player p = pl.getServer().getPlayer(args[1]);
                         if(p != null && pl.players.containsKey(p)) {
-                            pl.sql.deletePlayer(p.getName().toLowerCase());
+                            pl.sql.deletePlayer(p.getUniqueId());
                             p.setExp(0);
                             p.setLevel(0);
                             p.sendMessage(pl.getLang("youLeftClass").replaceAll("%name", pl.players.get(p).getClasse().getName()));

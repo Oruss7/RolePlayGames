@@ -40,11 +40,11 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
-        pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
+        new BukkitRunnable() {
 
             @Override
             public void run() {
-                Jogador j = pl.sql.getJogador(p.getName().toLowerCase());
+                Jogador j = pl.sql.getJogador(p.getUniqueId());
                 if(j != null) {
                     pl.players.put(p, j);
                 } else {
@@ -53,7 +53,7 @@ public class PlayerListener implements Listener {
                     }
                 }
             }
-        });
+        }.runTaskAsynchronously(pl);
     }
 
     @EventHandler
@@ -94,7 +94,7 @@ public class PlayerListener implements Listener {
                     } else if(e.getInventory() instanceof EnchantingInventory) {
                         p.setLevel(999);
                     }
-                    if(pl.proibido.contains(e.getCurrentItem().getType()) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                    if(!pl.blockItemMove && pl.proibido.contains(e.getCurrentItem().getType()) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
                         p.getWorld().dropItemNaturally(p.getLocation(), e.getCurrentItem());
                         p.getInventory().remove(e.getCurrentItem());
                         p.sendMessage(pl.getLang("proibitedItem"));
@@ -118,7 +118,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPickup(PlayerPickupItemEvent e) {
         Player p = e.getPlayer();
-        if(pl.proibido.contains(e.getItem().getItemStack().getType()) && pl.players.containsKey(p) &&
+        if(!pl.blockItemMove && pl.proibido.contains(e.getItem().getItemStack().getType()) && pl.players.containsKey(p) &&
                 !pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
             if(!cooldown.contains(p.getName())) {
                 p.sendMessage(pl.getLang("proibitedItem"));
@@ -248,10 +248,8 @@ public class PlayerListener implements Listener {
         if(pl.players.containsKey(p)) {
             if(pl.useExp) {
                 pl.players.get(p).addExp(e.getAmount());
-                e.setAmount(0);
-            } else {
-                e.setAmount(0);
             }
+            e.setAmount(0);
         }
     }
 
@@ -279,11 +277,11 @@ public class PlayerListener implements Listener {
 
     public void addCooldown(final String player, int timeInSec) {
         cooldown.add(player);
-        pl.getServer().getScheduler().scheduleSyncDelayedTask(pl, new BukkitRunnable() {
+        new BukkitRunnable() {
             @Override
             public void run() {
                 cooldown.remove(player);
             }
-        }, timeInSec * 20);
+        }.runTaskLater(pl, timeInSec * 20);
     }
 }

@@ -2,6 +2,7 @@ package com.jabyftw.rpglv;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,21 +19,17 @@ import java.util.logging.Level;
 public class Config {
 
     private final RPGLeveling pl;
-    public FileConfiguration classes;
-    private CustomConfig configYML, langYML, classesYML;
+    public CustomConfig configYML, langYML, classesYML;
+    public int mySQLTableVersion = 1;
 
     public Config(RPGLeveling pl) {
         this.pl = pl;
     }
 
     public void start() {
-        configYML = new CustomConfig("config");
-        langYML = new CustomConfig("lang");
-        classesYML = new CustomConfig("classes");
-        pl.defConfig = configYML.getCustomConfig();
-        pl.lang = langYML.getCustomConfig();
-        classes = classesYML.getCustomConfig();
-
+        configYML = new CustomConfig(pl, "config");
+        langYML = new CustomConfig(pl, "lang");
+        classesYML = new CustomConfig(pl, "classes");
         generateConfig();
         generateClasses();
         generateLang();
@@ -43,16 +40,21 @@ public class Config {
         config.addDefault("MySQL.username", "root");
         config.addDefault("MySQL.password", "pass");
         config.addDefault("MySQL.url", "jdbc:mysql://localhost:3306/database");
+        config.addDefault("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS", 1);
         config.addDefault("config.generateDefClassesYML", true);
         config.addDefault("config.useEXPChangeEvent", false);
+        config.addDefault("config.blockItemMoveOnInventory", true);
         config.addDefault("config.maxLevel", 30);
-        configYML.saveCustomConfig();
+        configYML.saveConfig();
+        mySQLTableVersion = config.getInt("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS");
         pl.maxLevel = config.getInt("config.maxLevel");
         pl.useExp = config.getBoolean("config.useEXPChangeEvent");
+        pl.blockItemMove = config.getBoolean("config.blockItemMoveOnInventory");
         pl.sql = new MySQL(pl, config.getString("MySQL.username"), config.getString("MySQL.password"), config.getString("MySQL.url"));
     }
 
     private void generateClasses() {
+        FileConfiguration classes = classesYML.getConfig();
         String[] blocked = {"diamond_sword", "276"};
         classes.addDefault("options.blockedItems", Arrays.asList(blocked));
         if(pl.defConfig.getBoolean("config.generateDefClassesYML")) {
@@ -74,7 +76,7 @@ public class Config {
             classes.addDefault("classes.noob.smeltGain", Arrays.asList(smeltg));
             classes.addDefault("classes.noob.default", true);
             classes.addDefault("classes.noob.levelingEquation", "100*(1.16^(%level-1))"); // Thanks phrstbrn and "Jobs"
-            classesYML.saveCustomConfig();
+            classesYML.saveConfig();
         }
         for(String s : classes.getStringList("options.blockedItems")) {
             pl.proibido.add(pl.getMatFromString(s));
@@ -115,7 +117,7 @@ public class Config {
         lang.addDefault("lang.playerArentOnAnyClass", "&cPlayer arent on any class.");
         lang.addDefault("lang.realLevelUsedMessage", "&6You used %cost real level(s). You have now &e%balance&6 real levels.");
         lang.addDefault("lang.noRealLevelsEnough", "&cYou dont have enough real levels. You have &4%balance&c and it costs &4%cost&c.");
-        langYML.saveCustomConfig();
+        langYML.saveConfig();
     }
 
     private Map<String, Integer> getGains(List<String> gains) {
@@ -130,29 +132,33 @@ public class Config {
         return l;
     }
 
+    public void updateMySQLVersionOnFile() {
+        configYML.getConfig().set("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS", mySQLTableVersion);
+        configYML.saveConfig();
+    }
+
     public class CustomConfig {
 
+        private final Plugin pl;
         private final String name;
-        private File file;
+        private final File file;
         private FileConfiguration fileConfig;
 
-        public CustomConfig(String name) {
+        public CustomConfig(Plugin pl, String name) {
+            this.pl = pl;
             this.name = name;
+            file = new File(pl.getDataFolder(), name + (name.contains(".yml") ? "" : ".yml"));
         }
 
-        public FileConfiguration getCustomConfig() {
+        public FileConfiguration getConfig() {
             if(fileConfig == null) {
-                reloadCustomConfig();
+                reloadConfig();
             }
             return fileConfig;
         }
 
-        public void reloadCustomConfig() {
-            if(fileConfig == null) {
-                file = new File(pl.getDataFolder(), name + ".yml");
-            }
+        private void reloadConfig() {
             fileConfig = YamlConfiguration.loadConfiguration(file);
-
             InputStream defConfigStream = pl.getResource(name + ".yml");
             if(defConfigStream != null) {
                 YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
@@ -160,15 +166,13 @@ public class Config {
             }
         }
 
-        public void saveCustomConfig() {
-            if(file == null) {
-                file = new File(pl.getDataFolder(), name + ".yml");
-            }
+        public void saveConfig() {
             try {
-                getCustomConfig().options().copyDefaults(true);
-                getCustomConfig().save(file);
+                getConfig().options().copyDefaults(true);
+                getConfig().save(file);
+                reloadConfig();
             } catch(IOException ex) {
-                pl.getLogger().log(Level.WARNING, "Couldn't save .yml");
+                pl.getLogger().log(Level.WARNING, "Couldn't save " + name + ".yml");
             }
         }
     }

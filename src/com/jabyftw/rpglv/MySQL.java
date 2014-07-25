@@ -1,14 +1,15 @@
 package com.jabyftw.rpglv;
 
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 import java.util.logging.Level;
 
-@SuppressWarnings("deprecation")
 public class MySQL {
 
     private final RPGLeveling pl;
@@ -24,14 +25,19 @@ public class MySQL {
 
     public Connection getConn() {
         try {
-            if(conn != null && conn.isValid(60)) {
-                return conn;
+            boolean invalidConnection = false;
+            if(conn == null || (invalidConnection = !conn.isValid(2))) {
+                if(invalidConnection) {
+                    closeConn();
+                }
+                conn = DriverManager.getConnection(url, user, pass);
+                pl.getLogger().info("Reconnected to MySQL (connection was closed or invalid).");
             }
-            conn = DriverManager.getConnection(url, user, pass);
+            return conn;
         } catch(SQLException e) {
-            pl.getLogger().log(Level.WARNING, "Couldn't connect to MySQL: {0}", e.getMessage());
+            pl.getLogger().warning("Couldn't connect to MySQL: " + e.getMessage());
         }
-        return conn;
+        return null;
     }
 
     public void closeConn() {
@@ -40,86 +46,67 @@ public class MySQL {
                 conn.close();
                 conn = null;
             } catch(SQLException ex) {
-                pl.getLogger().log(Level.WARNING, "Couldn''t connect to MySQL: {0}", ex.getMessage());
+                pl.getLogger().log(Level.WARNING, "Couldn't connect to MySQL: " + ex.getMessage());
             }
         }
     }
 
     public void createTable() {
-        pl.getServer().getScheduler().scheduleSyncDelayedTask(pl, new Runnable() {
+        if(pl.config.mySQLTableVersion < 2) {
+            try {
+                getConn().createStatement().executeUpdate("DROP TABLE IF EXISTS `rpgplayers`;");
+                getConn().createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS `rpgplayers` (\n" +
+                        "  `uuid`      CHAR(38)    NOT NULL,\n" +
+                        "  `level`     INT         NOT NULL DEFAULT 0,\n" +
+                        "  `exp`       INT         NOT NULL DEFAULT 0,\n" +
+                        "  `reallevel` INT         NOT NULL DEFAULT 0,\n" +
+                        "  `class`     VARCHAR(45) NOT NULL,\n" +
+                        "  PRIMARY KEY (`uuid`),\n" +
+                        "  UNIQUE INDEX `name_UNIQUE` (`uuid` ASC));");
+                pl.config.mySQLTableVersion++;
+                pl.config.updateMySQLVersionOnFile();
+            } catch(SQLException e) {
+                pl.getLogger().log(Level.SEVERE, "Disabling plugin, cant MySQL create table: " + e.getMessage());
+                e.printStackTrace();
+                pl.getServer().getPluginManager().disablePlugin(pl);
+            }
+        }
+    }
+
+    public void insertPlayer(final UUID uuid, final int level, final int exp, final int reallevel, final String classe) {
+        new BukkitRunnable() {
 
             @Override
             public void run() {
                 try {
-                    getConn().createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS `rpgplayers` (\n"
-                            + "  `name` VARCHAR(20) NOT NULL,\n"
-                            + "  `level` INT NOT NULL DEFAULT 0,\n"
-                            + "  `exp` INT NOT NULL DEFAULT 0,\n"
-                            + "  `reallevel` INT NOT NULL DEFAULT 0,\n"
-                            + "  `class` VARCHAR(45) NOT NULL,\n"
-                            + "  PRIMARY KEY (`name`),\n"
-                            + "  UNIQUE INDEX `name_UNIQUE` (`name` ASC));");
+                    getConn().createStatement().execute("INSERT INTO `rpgplayers` (`uuid`, `level`, `exp`, `reallevel`, `class`) VALUES ('" + uuid + "', " + level + ", " + exp + ", " + reallevel + ", '" + classe + "');");
                 } catch(SQLException e) {
                     e.printStackTrace();
-                    pl.getLogger().log(Level.SEVERE, "Disabling plugin, cant create table.");
-                    pl.getServer().getPluginManager().disablePlugin(pl);
-                }
-                try {
-                    if(Double.parseDouble(pl.getDescription().getVersion()) < 0.6D) {
-                        getConn().createStatement().executeUpdate("ALTER TABLE `rpgplayers` \n"
-                                + "ADD COLUMN `reallevel` INT NOT NULL DEFAULT 0 AFTER `exp`;");
-                    }
-                } catch(NumberFormatException ignored) {
-                } catch(SQLException ignored) {
                 }
             }
-        });
+        }.runTaskAsynchronously(pl);
     }
 
-    public void insertPlayer(String name, int level, int exp, int reallevel, String classe) {
-        final String name2 = name.toLowerCase();
-        final int level2 = level;
-        final int reallevel2 = reallevel;
-        final int exp2 = exp;
-        final String classe2 = classe;
-        pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
+    public void updatePlayer(final UUID uuid, final int level, final int exp, final int reallevel, final String classe) {
+        new BukkitRunnable() {
 
             @Override
             public void run() {
                 try {
-                    getConn().createStatement().execute("INSERT INTO `rpgplayers` (`name`, `level`, `exp`, `reallevel`, `class`) VALUES ('" + name2 + "', " + level2 + ", " + exp2 + ", " + reallevel2 + ", '" + classe2 + "');");
+                    getConn().createStatement().execute("UPDATE `rpgplayers` SET `level`=" + level + ", `exp`=" + exp + ", `reallevel`=" + reallevel + ", `class`='" + classe + "' WHERE `uuid`='" + uuid + "';");
                 } catch(SQLException e) {
                     e.printStackTrace();
                 }
             }
-        });
+        }.runTaskAsynchronously(pl);
     }
 
-    public void updatePlayer(String name, int level, int exp, int reallevel, String classe) {
-        final String name2 = name.toLowerCase();
-        final int level2 = level;
-        final int reallevel2 = reallevel;
-        final int exp2 = exp;
-        final String classe2 = classe;
-        pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    getConn().createStatement().execute("UPDATE `rpgplayers` SET `level`=" + level2 + ", `exp`=" + exp2 + ", `reallevel`=" + reallevel2 + ", `class`='" + classe2 + "' WHERE `name`='" + name2 + "';");
-                } catch(SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public Jogador getJogador(String name) {
+    public Jogador getJogador(UUID uuid) {
         Jogador j = null; // not on database or not online
         try {
-            ResultSet rs = getConn().createStatement().executeQuery("SELECT `level`, `exp`, `reallevel`, `class` FROM `rpgplayers` WHERE `name`='" + name + "';");
+            ResultSet rs = getConn().createStatement().executeQuery("SELECT `level`, `exp`, `reallevel`, `class` FROM `rpgplayers` WHERE `uuid`='" + uuid + "';");
             while(rs.next()) {
-                Player p = pl.getServer().getPlayer(name);
+                Player p = pl.getServer().getPlayer(uuid);
                 if(p != null) {
                     j = new Jogador(pl, p, rs.getInt("level"), rs.getInt("exp"), rs.getInt("reallevel"), rs.getString("class"));
                 }
@@ -130,24 +117,23 @@ public class MySQL {
         return j;
     }
 
-    public void deletePlayer(String n) {
-        final String name = n.toLowerCase();
-        pl.getServer().getScheduler().scheduleAsyncDelayedTask(pl, new Runnable() {
+    public void deletePlayer(final UUID uuid) {
+        new BukkitRunnable() {
 
             @Override
             public void run() {
                 try {
-                    getConn().createStatement().execute("DELETE FROM `rpgplayers` WHERE `name`='" + name + "';");
+                    getConn().createStatement().execute("DELETE FROM `rpgplayers` WHERE `uuid`='" + uuid + "';");
                 } catch(SQLException e) {
                     e.printStackTrace();
                 }
             }
-        });
+        }.runTaskAsynchronously(pl);
     }
 
-    public void updatePlayerSync(String name, int level, int exp, int reallevel, String classe) {
+    public void updatePlayerSync(UUID uuid, int level, int exp, int reallevel, String classe) {
         try {
-            getConn().createStatement().execute("UPDATE `rpgplayers` SET `level`=" + level + ", `exp`=" + exp + ", `reallevel`=" + reallevel + ", `class`='" + classe + "' WHERE `name`='" + name + "';");
+            getConn().createStatement().execute("UPDATE `rpgplayers` SET `level`=" + level + ", `exp`=" + exp + ", `reallevel`=" + reallevel + ", `class`='" + classe + "' WHERE `uuid`='" + uuid + "';");
         } catch(SQLException e) {
             e.printStackTrace();
         }

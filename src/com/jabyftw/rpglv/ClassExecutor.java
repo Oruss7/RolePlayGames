@@ -28,7 +28,7 @@ public class ClassExecutor implements CommandExecutor {
                         if(sender instanceof Player) {
                             Player p = (Player) sender;
                             if(pl.players.containsKey(p)) {
-                                pl.sql.deletePlayer(p.getName().toLowerCase());
+                                pl.sql.deletePlayer(p.getUniqueId());
                                 p.setExp(0);
                                 p.setLevel(0);
                                 for(PotionEffect pet : p.getActivePotionEffects()) {

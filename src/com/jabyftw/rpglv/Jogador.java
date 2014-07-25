@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 
@@ -13,21 +14,21 @@ import java.util.ArrayList;
 public class Jogador {
 
     private final RPGLeveling pl;
-    private final Player p;
+    private final Player player;
     private final ArrayList<String> permissions = new ArrayList<String>();
     private final ArrayList<Material> allowedProibido = new ArrayList<Material>();
     private final Classe classe;
-    private int level, exp, expNeeded, reallevel;
+    private int level, exp, expNeeded, realLevel;
 
-    public Jogador(RPGLeveling pl, Player p, int level, int exp, int reallevel, String clas) {
+    public Jogador(RPGLeveling pl, Player player, int level, int exp, int realLevel, String clas) {
         this.pl = pl;
-        this.p = p;
+        this.player = player;
         this.level = level;
-        this.reallevel = reallevel;
+        this.realLevel = realLevel;
         this.exp = exp;
         classe = pl.getClasse(clas);
         expNeeded = classe.getExpNeeded(level);
-        retriveItemAndPermReward();
+        retrieveItemAndPermReward();
         sendStatsToPlayer();
     }
 
@@ -48,11 +49,11 @@ public class Jogador {
     }
 
     public int getRealLevel() {
-        return reallevel;
+        return realLevel;
     }
 
     public void addRealLevel(int added) {
-        reallevel += added;
+        realLevel += added;
     }
 
     public void addExp(int experience) {
@@ -63,22 +64,22 @@ public class Jogador {
         }// exp / exp needed
         sendStatsToPlayer();
         if(experience > 0) {
-            p.playSound(p.getLocation(), Sound.ORB_PICKUP, 0.3F, 0);
+            player.playSound(player.getLocation(), Sound.ORB_PICKUP, 0.3F, 0);
         }
     }
 
     public Player getPlayer() {
-        return p;
+        return player;
     }
 
     public void addLevel(int added, boolean legit) {
-        int plevel = level;
+        int playerLevel = level;
         for(int i = 1; i <= added; i++) {
-            plevel += i;
-            if(plevel >= pl.maxLevel) {
+            playerLevel += i;
+            if(playerLevel >= pl.maxLevel) {
                 level = pl.maxLevel;
             } else {
-                level = plevel;
+                level = playerLevel;
                 expNeeded = classe.getExpNeeded(level);
             }
             sendStatsToPlayer();
@@ -87,9 +88,9 @@ public class Jogador {
                 broadcastLevel(level);
             }
         }
-        p.playSound(p.getLocation(), Sound.LEVEL_UP, 1, 0);
-        p.getWorld().playEffect(p.getLocation(), Effect.STEP_SOUND, 18);
-        Firework firework = p.getWorld().spawn(p.getLocation(), Firework.class);
+        player.playSound(player.getLocation(), Sound.LEVEL_UP, 1, 0);
+        player.getWorld().playEffect(player.getLocation(), Effect.STEP_SOUND, 18);
+        Firework firework = player.getWorld().spawn(player.getLocation(), Firework.class);
         FireworkMeta data = firework.getFireworkMeta();
         data.addEffect(FireworkEffect.builder().withColor(Color.RED).with(FireworkEffect.Type.BALL_LARGE).build());
         firework.setFireworkMeta(data);
@@ -98,9 +99,9 @@ public class Jogador {
 
     public void savePlayer(boolean async) {
         if(async) {
-            pl.sql.updatePlayer(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
+            pl.sql.updatePlayer(player.getUniqueId(), level, exp, realLevel, classe.getName());
         } else {
-            pl.sql.updatePlayerSync(p.getName().toLowerCase(), level, exp, reallevel, classe.getName());
+            pl.sql.updatePlayerSync(player.getUniqueId(), level, exp, realLevel, classe.getName());
         }
     }
 
@@ -109,28 +110,35 @@ public class Jogador {
     }
 
     public void addItemPerm(Material reward) {
-        if(pl.proibido.contains(reward) && classe.getProibido().contains(reward)) { // if true && false, this item is proibited on other class and not disponible on this
+        if(pl.proibido.contains(reward) && classe.getProibido().contains(reward)) { // if true && false, this item is prohibited on other class and not disponible on this
             allowedProibido.add(reward);
         }
     }
 
     private void broadcastLevel(int level) {
         if(classe.getBroadcastLevels().contains(level)) {
-            pl.broadcast(pl.getLang("broadcastLevel").replaceAll("%name", p.getDisplayName()).replaceAll("%level", Integer.toString(level)).replaceAll("%class", classe.getName()));
+            pl.broadcast(pl.getLang("broadcastLevel").replaceAll("%name", player.getDisplayName()).replaceAll("%level", Integer.toString(level)).replaceAll("%class", classe.getName()));
         }
     }
 
-    private void retriveItemAndPermReward() {
-        classe.retriveItemAndPermReward(this);
+    private void retrieveItemAndPermReward() {
+        classe.retrieveItemAndPermReward(this);
     }
 
     public void sendStatsToPlayer() {
-        p.setLevel(level);
-        if(exp > 0) {
-            p.setExp((exp * 1.0F / expNeeded * 1.0F));
-        } else {
-            p.setExp(0);
-        }
+        new BukkitRunnable() {
+
+            @Override
+            public void run() {
+                player.setTotalExperience(0);
+                if(exp > 0) {
+                    player.setExp((exp * 1.0F / expNeeded * 1.0F));
+                } else {
+                    player.setExp(0);
+                }
+                player.setLevel(level);
+            }
+        }.runTaskLater(pl, 2);
         getClasse().retrivePotionEffects(this);
     }
 
@@ -139,9 +147,9 @@ public class Jogador {
     }
 
     public void removeAllPermissions() {
-        for(String s : permissions) {
-            for(World w : pl.getServer().getWorlds()) {
-                pl.perm.playerRemove(w, p.getName(), s);
+        for(String permission : permissions) {
+            for(World world : pl.getServer().getWorlds()) {
+                pl.perm.playerRemove(world.getName(), player, permission);
             }
         }
     }

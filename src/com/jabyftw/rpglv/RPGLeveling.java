@@ -10,6 +10,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +30,7 @@ public class RPGLeveling extends JavaPlugin {
     public Economy econ = null;
     // RPG things
     public int maxLevel;
-    public boolean useExp;
+    public boolean useExp, blockItemMove;
     public List<Material> proibido = new ArrayList<Material>();
     public Map<Player, Jogador> players = new HashMap<Player, Jogador>();
     public Classe defaultClass;
@@ -82,10 +83,10 @@ public class RPGLeveling extends JavaPlugin {
     public void findPlayers() {
         for(final Player p : getServer().getOnlinePlayers()) {
             //noinspection deprecation
-            getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+            new BukkitRunnable() {
                 @Override
                 public void run() {
-                    Jogador j = sql.getJogador(p.getName().toLowerCase());
+                    Jogador j = sql.getJogador(p.getUniqueId());
                     if(j != null) {
                         players.put(p, j);
                     } else {
@@ -94,7 +95,7 @@ public class RPGLeveling extends JavaPlugin {
                         }
                     }
                 }
-            });
+            }.runTaskAsynchronously(this);
         }
     }
 
