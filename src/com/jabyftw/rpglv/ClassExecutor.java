@@ -18,7 +18,7 @@ public class ClassExecutor implements CommandExecutor {
     }
 
     @Override // /class (name/list/exit)
-    public boolean onCommand(CommandSender sender, Command cmd, String lavel, String[] args) {
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if(sender.hasPermission("rpglevel.join")) {
             if(args.length < 1) {
                 return false;

@@ -2,9 +2,10 @@ package com.jabyftw.rpglv;
 
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
+import org.apache.commons.lang.NumberUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -16,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * @author Rafael
@@ -25,10 +25,10 @@ public class RPGLeveling extends JavaPlugin {
 
     public MySQL sql;
     public Config config;
-    public FileConfiguration defConfig, lang;
+    //    public FileConfiguration defConfig, lang;
     public Permission perm = null;
     public Economy econ = null;
-    // RPG things
+
     public int maxLevel;
     public boolean useExp, blockItemMove;
     public List<Material> proibido = new ArrayList<Material>();
@@ -43,24 +43,24 @@ public class RPGLeveling extends JavaPlugin {
         config = new Config(this);
         config.start();
         sql.createTable();
-        log("Loaded configuration!");
+        getLogger().info("Loaded configuration!");
         setupVault();
         playerListener = new PlayerListener(this);
         getServer().getPluginManager().registerEvents(playerListener, this);
         getServer().getPluginCommand("class").setExecutor(new ClassExecutor(this));
         getServer().getPluginCommand("rpg").setExecutor(new RPGExecutor(this));
-        log("Registered commands, listeners and Vault!");
-        log("Enabled in " + (System.currentTimeMillis() - start) + "ms.");
+        getLogger().info("Registered commands, listeners and Vault!");
+        getLogger().info("Enabled in " + (System.currentTimeMillis() - start) + "ms.");
     }
 
     @Override
     public void onDisable() {
-        for(Jogador j : players.values()) {
-            j.savePlayer(false);
+        for(Jogador jogador : players.values()) {
+            jogador.savePlayer(false);
         }
         sql.closeConn();
         getServer().getScheduler().cancelTasks(this);
-        log("Disabled!");
+        getLogger().info("Disabled!");
     }
 
     public void onReload(CommandSender sender) {
@@ -81,17 +81,16 @@ public class RPGLeveling extends JavaPlugin {
     }
 
     public void findPlayers() {
-        for(final Player p : getServer().getOnlinePlayers()) {
-            //noinspection deprecation
+        for(final Player player : getServer().getOnlinePlayers()) {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    Jogador j = sql.getJogador(p.getUniqueId());
-                    if(j != null) {
-                        players.put(p, j);
+                    Jogador jogador = sql.getJogador(player.getUniqueId());
+                    if(jogador != null) {
+                        players.put(player, jogador);
                     } else {
-                        for(PotionEffect pet : p.getActivePotionEffects()) {
-                            p.removePotionEffect(pet.getType());
+                        for(PotionEffect potionEffect : player.getActivePotionEffects()) {
+                            player.removePotionEffect(potionEffect.getType());
                         }
                     }
                 }
@@ -99,57 +98,51 @@ public class RPGLeveling extends JavaPlugin {
         }
     }
 
-    public void log(String msg) {
-        getLogger().log(Level.INFO, msg);
-    }
-
-    public void broadcast(String msg) {
-        for(Player p : getServer().getOnlinePlayers()) {
-            p.sendMessage(msg);
+    public void broadcast(String message) {
+        for(Player player : getServer().getOnlinePlayers()) {
+            player.sendMessage(message);
         }
+        getLogger().info("Broadcast: " + ChatColor.stripColor(message));
     }
 
     public String getLang(String path) {
-        return lang.getString("lang." + path).replaceAll("&", "§");
+        return config.langYML.getConfig().getString("lang." + path).replaceAll("&", "§");
     }
 
     @SuppressWarnings("deprecation")
-    public Material getMatFromString(String s) {
-        for(Material m : Material.values()) {
-            if(m.toString().equalsIgnoreCase(s)) {
-                return m;
+    public Material getMatFromString(String searched) {
+        for(Material material : Material.values()) {
+            if(material.name().equalsIgnoreCase(searched)) {
+                return material;
             }
         }
-        try {
-            int id = Integer.parseInt(s);
-            for(Material m : Material.values()) {
-                if(m.getId() == id) {
-                    return m;
+        if(NumberUtils.isNumber(searched)) {
+            int id = Integer.parseInt(searched);
+            for(Material material : Material.values()) {
+                if(material.getId() == id) {
+                    return material;
                 }
             }
-        } catch(NumberFormatException ignored) {
         }
         return Material.DIAMOND_SPADE;
     }
 
     public Classe getClasse(String name) {
-        for(Classe c : classes) {
-            if(c.getName().equalsIgnoreCase(name)) {
-                return c;
+        for(Classe classe : classes) {
+            if(classe.getName().equalsIgnoreCase(name)) {
+                return classe;
             }
         }
         return defaultClass;
-
     }
 
-    private void setupVault() {
+    private boolean setupVault() {
         RegisteredServiceProvider<Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
-        if(permissionProvider != null) {
-            perm = permissionProvider.getProvider();
-        }
         RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if(economyProvider != null) {
+        if(permissionProvider != null)
+            perm = permissionProvider.getProvider();
+        if(economyProvider != null)
             econ = economyProvider.getProvider();
-        }
+        return econ != null && perm != null;
     }
 }

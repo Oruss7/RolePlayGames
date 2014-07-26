@@ -36,7 +36,7 @@ public class Config {
     }
 
     private void generateConfig() {
-        FileConfiguration config = pl.defConfig;
+        FileConfiguration config = configYML.getConfig();
         config.addDefault("MySQL.username", "root");
         config.addDefault("MySQL.password", "pass");
         config.addDefault("MySQL.url", "jdbc:mysql://localhost:3306/database");
@@ -57,23 +57,23 @@ public class Config {
         FileConfiguration classes = classesYML.getConfig();
         String[] blocked = {"diamond_sword", "276"};
         classes.addDefault("options.blockedItems", Arrays.asList(blocked));
-        if(pl.defConfig.getBoolean("config.generateDefClassesYML")) {
+        if(configYML.getConfig().getBoolean("config.generateDefClassesYML")) {
             classes.addDefault("classes.noob.name", "Noob");
             classes.addDefault("classes.noob.permissionToJoin", "rpglevel.join");
             String[] rewards = {"10;playercommand;motd", "10;consolecommand;tell %player% hello", "10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
             classes.addDefault("classes.noob.rewards", Arrays.asList(rewards));
-            String[] perewards = {"10/health_boost;1", "15/health_boost;2", "25/damage_resistance;1"};
-            classes.addDefault("classes.noob.potioneffects", Arrays.asList(perewards));
+            String[] potionEffectRewards = {"10/health_boost;1", "15/health_boost;2", "25/damage_resistance;1"};
+            classes.addDefault("classes.noob.potioneffects", Arrays.asList(potionEffectRewards));
             String[] levels = {"10", "20", "30"};
             classes.addDefault("classes.noob.broadcastLevels", Arrays.asList(levels));
-            String[] kgain = {"zombie;12", "player;20", "creeper;15", "cave_spider;18", "skeleton;14", "spider;12", "chicken;3", "cow;3", "horse;2", "bat;3", "ender_dragon;8001", "enderman;7", "silverfish;5", "mushroom_cow;5", "ocelot;3", "sheep;2", "slime;8", "squid;4", "witch;12", "wither;1200", "wolf;5", "pig;5", "pig_zombie;15", "magma_cube;18", "blaze;15"};
-            classes.addDefault("classes.noob.killGain", Arrays.asList(kgain));
-            String[] bgain = {"gold_ore;10", "iron_ore;5", "coal_ore;2", "lapis_ore;12", "diamond_ore;20", "redstone_ore;8", "glowing_redstone_ore;8", "quartz_ore;10", "mob_spawner;30"};
-            classes.addDefault("classes.noob.breakGain", Arrays.asList(bgain));
-            String[] pgain = {"gold_ore;-10", "iron_ore;-5", "coal_ore;-2", "lapis_ore;-12", "diamond_ore;-20", "redstone_ore;-8", "glowing_redstone_ore;-8", "quartz_ore;-10", "mob_spawner;-30"};
-            classes.addDefault("classes.noob.placeGain", Arrays.asList(pgain));
-            String[] smeltg = {"gold_ingot;3", "iron_ingot;3", "redstone;3", "stone;3", "glass;3", "coal;5", "brick;3", "hard_clay;3", "baked_potato;3", "cooked_beef;3", "cooked_chicken;3", "cooked_fish;3", "GRILLED_PORK;3", "ink_sack;3", "quartz;3"};
-            classes.addDefault("classes.noob.smeltGain", Arrays.asList(smeltg));
+            String[] kGain = {"zombie;12", "player;20", "creeper;15", "cave_spider;18", "skeleton;14", "spider;12", "chicken;3", "cow;3", "horse;2", "bat;3", "ender_dragon;8001", "enderman;7", "silverfish;5", "mushroom_cow;5", "ocelot;3", "sheep;2", "slime;8", "squid;4", "witch;12", "wither;1200", "wolf;5", "pig;5", "pig_zombie;15", "magma_cube;18", "blaze;15"};
+            classes.addDefault("classes.noob.killGain", Arrays.asList(kGain));
+            String[] bGain = {"gold_ore;10", "iron_ore;5", "coal_ore;2", "lapis_ore;12", "diamond_ore;20", "redstone_ore;8", "glowing_redstone_ore;8", "quartz_ore;10", "mob_spawner;30"};
+            classes.addDefault("classes.noob.breakGain", Arrays.asList(bGain));
+            String[] pGain = {"gold_ore;-10", "iron_ore;-5", "coal_ore;-2", "lapis_ore;-12", "diamond_ore;-20", "redstone_ore;-8", "glowing_redstone_ore;-8", "quartz_ore;-10", "mob_spawner;-30"};
+            classes.addDefault("classes.noob.placeGain", Arrays.asList(pGain));
+            String[] smeltGain = {"gold_ingot;3", "iron_ingot;3", "redstone;3", "stone;3", "glass;3", "coal;5", "brick;3", "hard_clay;3", "baked_potato;3", "cooked_beef;3", "cooked_chicken;3", "cooked_fish;3", "GRILLED_PORK;3", "ink_sack;3", "quartz;3"};
+            classes.addDefault("classes.noob.smeltGain", Arrays.asList(smeltGain));
             classes.addDefault("classes.noob.default", true);
             classes.addDefault("classes.noob.levelingEquation", "100*(1.16^(%level-1))"); // Thanks phrstbrn and "Jobs"
             classesYML.saveConfig();
@@ -85,9 +85,9 @@ public class Config {
             String name = classes.getString("classes." + key + ".name");
             String leveling = classes.getString("classes." + key + ".levelingEquation");
             String permission = classes.getString("classes." + key + ".permissionToJoin");
-            boolean defaultC = classes.getBoolean("classes." + key + ".default");
+            boolean isDefaultClass = classes.getBoolean("classes." + key + ".default");
             Classe c = new Classe(pl, name, leveling, permission, classes.getStringList("classes." + key + ".broadcastLevels"), classes.getStringList("classes." + key + ".rewards"), classes.getStringList("classes." + key + ".potioneffects"), getGains(classes.getStringList("classes." + key + ".killGain")), getGains(classes.getStringList("classes." + key + ".breakGain")), getGains(classes.getStringList("classes." + key + ".placeGain")), getGains(classes.getStringList("classes." + key + ".smeltGain")));
-            if(defaultC) {
+            if(isDefaultClass) {
                 pl.defaultClass = c;
             }
             pl.classes.add(c);
@@ -95,7 +95,7 @@ public class Config {
     }
 
     private void generateLang() {
-        FileConfiguration lang = pl.lang;
+        FileConfiguration lang = langYML.getConfig();
         //lang.addDefault("lang.", "&");
         lang.addDefault("lang.proibitedItem", "&cProibited item! Can't use it yet.");
         lang.addDefault("lang.broadcastLevel", "%name &6reached level &e%level &6on class &e%class&6.");

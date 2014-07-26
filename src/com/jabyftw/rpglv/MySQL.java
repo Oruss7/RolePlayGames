@@ -3,10 +3,7 @@ package com.jabyftw.rpglv;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -52,7 +49,7 @@ public class MySQL {
     }
 
     public void createTable() {
-        if(pl.config.mySQLTableVersion < 2) {
+        if(pl.config.mySQLTableVersion < 2) { // Default is 1, witch it is less than 2. So it'll drop and recreate when 1 is set
             try {
                 getConn().createStatement().executeUpdate("DROP TABLE IF EXISTS `rpgplayers`;");
                 getConn().createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS `rpgplayers` (\n" +
@@ -79,7 +76,13 @@ public class MySQL {
             @Override
             public void run() {
                 try {
-                    getConn().createStatement().execute("INSERT INTO `rpgplayers` (`uuid`, `level`, `exp`, `reallevel`, `class`) VALUES ('" + uuid + "', " + level + ", " + exp + ", " + reallevel + ", '" + classe + "');");
+                    PreparedStatement preparedStatement = getConn().prepareStatement("INSERT INTO `rpgplayers` (`uuid`, `level`, `exp`, `reallevel`, `class`) VALUES (?, ?, ?, ?, ?);");
+                    preparedStatement.setObject(1, uuid);
+                    preparedStatement.setInt(2, level);
+                    preparedStatement.setInt(3, exp);
+                    preparedStatement.setInt(4, reallevel);
+                    preparedStatement.setString(5, classe);
+                    preparedStatement.execute();
                 } catch(SQLException e) {
                     e.printStackTrace();
                 }
@@ -92,29 +95,27 @@ public class MySQL {
 
             @Override
             public void run() {
-                try {
-                    getConn().createStatement().execute("UPDATE `rpgplayers` SET `level`=" + level + ", `exp`=" + exp + ", `reallevel`=" + reallevel + ", `class`='" + classe + "' WHERE `uuid`='" + uuid + "';");
-                } catch(SQLException e) {
-                    e.printStackTrace();
-                }
+                updatePlayerSync(uuid, level, exp, reallevel, classe);
             }
         }.runTaskAsynchronously(pl);
     }
 
     public Jogador getJogador(UUID uuid) {
-        Jogador j = null; // not on database or not online
+        Jogador jogador = null; // not on database or not online
         try {
-            ResultSet rs = getConn().createStatement().executeQuery("SELECT `level`, `exp`, `reallevel`, `class` FROM `rpgplayers` WHERE `uuid`='" + uuid + "';");
-            while(rs.next()) {
-                Player p = pl.getServer().getPlayer(uuid);
-                if(p != null) {
-                    j = new Jogador(pl, p, rs.getInt("level"), rs.getInt("exp"), rs.getInt("reallevel"), rs.getString("class"));
+            PreparedStatement preparedStatement = getConn().prepareStatement("SELECT `level`, `exp`, `reallevel`, `class` FROM `rpgplayers` WHERE `uuid`=?;");
+            preparedStatement.setObject(1, uuid);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()) {
+                Player player = pl.getServer().getPlayer(uuid);
+                if(player != null) {
+                    jogador = new Jogador(pl, player, resultSet.getInt("level"), resultSet.getInt("exp"), resultSet.getInt("reallevel"), resultSet.getString("class"));
                 }
             }
         } catch(SQLException e) {
             e.printStackTrace();
         }
-        return j;
+        return jogador;
     }
 
     public void deletePlayer(final UUID uuid) {
@@ -123,7 +124,9 @@ public class MySQL {
             @Override
             public void run() {
                 try {
-                    getConn().createStatement().execute("DELETE FROM `rpgplayers` WHERE `uuid`='" + uuid + "';");
+                    PreparedStatement preparedStatement = getConn().prepareStatement("DELETE FROM `rpgplayers` WHERE `uuid`=?;");
+                    preparedStatement.setObject(1, uuid);
+                    preparedStatement.execute();
                 } catch(SQLException e) {
                     e.printStackTrace();
                 }
@@ -133,7 +136,13 @@ public class MySQL {
 
     public void updatePlayerSync(UUID uuid, int level, int exp, int reallevel, String classe) {
         try {
-            getConn().createStatement().execute("UPDATE `rpgplayers` SET `level`=" + level + ", `exp`=" + exp + ", `reallevel`=" + reallevel + ", `class`='" + classe + "' WHERE `uuid`='" + uuid + "';");
+            PreparedStatement preparedStatement = getConn().prepareStatement("UPDATE `rpgplayers` SET `level`=?, `exp`=?, `reallevel`=?, `class`=? WHERE `uuid`=?;");
+            preparedStatement.setInt(1, level);
+            preparedStatement.setInt(2, exp);
+            preparedStatement.setInt(3, reallevel);
+            preparedStatement.setString(4, classe);
+            preparedStatement.setObject(5, uuid);
+            preparedStatement.executeUpdate();
         } catch(SQLException e) {
             e.printStackTrace();
         }
