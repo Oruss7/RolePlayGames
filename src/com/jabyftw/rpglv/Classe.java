@@ -246,13 +246,15 @@ public class Classe {
         }
 
         public void giveReward(Jogador jogador, boolean announce) {
-            jogador.addPerm(reward);
-            if(announce) {
-                jogador.getPlayer().sendMessage(pl.getLang("youGainedAPermission"));
-            }
-            for(World world : pl.getServer().getWorlds()) {
-                pl.perm.playerAdd(world.getName(), jogador.getPlayer(), reward);
+            if(pl.config.useVault) {
                 jogador.addPerm(reward);
+                if(announce) {
+                    jogador.getPlayer().sendMessage(pl.getLang("youGainedAPermission"));
+                }
+                for(World world : pl.getServer().getWorlds()) {
+                    pl.perm.playerAdd(world.getName(), jogador.getPlayer(), reward);
+                    jogador.addPerm(reward);
+                }
             }
         }
     }
@@ -266,7 +268,7 @@ public class Classe {
         }
 
         public void giveReward(Player p) {
-            if(pl.econ.depositPlayer(p, reward).transactionSuccess()) {
+            if(pl.config.useVault && pl.econ.depositPlayer(p, reward).transactionSuccess()) {
                 p.sendMessage(pl.getLang("youGainedMoney").replaceAll("%money", Double.toString(reward)));
             }
         }

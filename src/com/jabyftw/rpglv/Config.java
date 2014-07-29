@@ -21,6 +21,7 @@ public class Config {
     private final RPGLeveling pl;
     public CustomConfig configYML, langYML, classesYML;
     public int mySQLTableVersion = 1;
+    public boolean useVault;
 
     public Config(RPGLeveling pl) {
         this.pl = pl;
@@ -42,11 +43,13 @@ public class Config {
         config.addDefault("MySQL.url", "jdbc:mysql://localhost:3306/database");
         config.addDefault("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS", 1);
         config.addDefault("config.generateDefClassesYML", true);
+        config.addDefault("config.useVaultSupport", true);
         config.addDefault("config.useEXPChangeEvent", false);
         config.addDefault("config.blockItemMoveOnInventory", true);
         config.addDefault("config.maxLevel", 30);
         configYML.saveConfig();
         mySQLTableVersion = config.getInt("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS");
+        useVault = config.getBoolean("config.useVaultSupport");
         pl.maxLevel = config.getInt("config.maxLevel");
         pl.useExp = config.getBoolean("config.useEXPChangeEvent");
         pl.blockItemMove = config.getBoolean("config.blockItemMoveOnInventory");

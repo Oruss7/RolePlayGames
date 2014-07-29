@@ -60,7 +60,8 @@ public class Jogador {
         this.exp += experience;
         while(exp >= expNeeded) { // 15 > 10
             exp = (exp - expNeeded); // 15 - 10 = 5
-            addLevel(1, true);
+            if(level < pl.maxLevel)
+                addLevel(1, true);
         }// exp / exp needed
         sendStatsToPlayer();
         if(experience > 0) {
@@ -147,9 +148,11 @@ public class Jogador {
     }
 
     public void removeAllPermissions() {
-        for(String permission : permissions) {
-            for(World world : pl.getServer().getWorlds()) {
-                pl.perm.playerRemove(world.getName(), player, permission);
+        if(pl.config.useVault) {
+            for(String permission : permissions) {
+                for(World world : pl.getServer().getWorlds()) {
+                    pl.perm.playerRemove(world.getName(), player, permission);
+                }
             }
         }
     }

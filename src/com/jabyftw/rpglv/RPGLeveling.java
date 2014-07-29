@@ -44,12 +44,15 @@ public class RPGLeveling extends JavaPlugin {
         config.start();
         sql.createTable();
         getLogger().info("Loaded configuration!");
-        setupVault();
+        if(config.useVault && !setupVault()) {
+            getLogger().info("Couldn't setup Vault!");
+            config.useVault = false;
+        }
         playerListener = new PlayerListener(this);
         getServer().getPluginManager().registerEvents(playerListener, this);
         getServer().getPluginCommand("class").setExecutor(new ClassExecutor(this));
         getServer().getPluginCommand("rpg").setExecutor(new RPGExecutor(this));
-        getLogger().info("Registered commands, listeners and Vault!");
+        getLogger().info("Registered commands, listeners!");
         getLogger().info("Enabled in " + (System.currentTimeMillis() - start) + "ms.");
     }
 
@@ -139,10 +142,12 @@ public class RPGLeveling extends JavaPlugin {
     private boolean setupVault() {
         RegisteredServiceProvider<Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
         RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if(permissionProvider != null)
+        if(permissionProvider != null) {
             perm = permissionProvider.getProvider();
-        if(economyProvider != null)
+        }
+        if(economyProvider != null) {
             econ = economyProvider.getProvider();
-        return econ != null && perm != null;
+        }
+        return (perm != null) && (econ != null);
     }
 }

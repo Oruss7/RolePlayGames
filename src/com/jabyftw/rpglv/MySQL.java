@@ -77,7 +77,7 @@ public class MySQL {
             public void run() {
                 try {
                     PreparedStatement preparedStatement = getConn().prepareStatement("INSERT INTO `rpgplayers` (`uuid`, `level`, `exp`, `reallevel`, `class`) VALUES (?, ?, ?, ?, ?);");
-                    preparedStatement.setObject(1, uuid);
+                    preparedStatement.setString(1, uuid.toString());
                     preparedStatement.setInt(2, level);
                     preparedStatement.setInt(3, exp);
                     preparedStatement.setInt(4, reallevel);
@@ -104,7 +104,7 @@ public class MySQL {
         Jogador jogador = null; // not on database or not online
         try {
             PreparedStatement preparedStatement = getConn().prepareStatement("SELECT `level`, `exp`, `reallevel`, `class` FROM `rpgplayers` WHERE `uuid`=?;");
-            preparedStatement.setObject(1, uuid);
+            preparedStatement.setString(1, uuid.toString());
             ResultSet resultSet = preparedStatement.executeQuery();
             while(resultSet.next()) {
                 Player player = pl.getServer().getPlayer(uuid);
@@ -125,7 +125,7 @@ public class MySQL {
             public void run() {
                 try {
                     PreparedStatement preparedStatement = getConn().prepareStatement("DELETE FROM `rpgplayers` WHERE `uuid`=?;");
-                    preparedStatement.setObject(1, uuid);
+                    preparedStatement.setString(1, uuid.toString());
                     preparedStatement.execute();
                 } catch(SQLException e) {
                     e.printStackTrace();
@@ -141,7 +141,7 @@ public class MySQL {
             preparedStatement.setInt(2, exp);
             preparedStatement.setInt(3, reallevel);
             preparedStatement.setString(4, classe);
-            preparedStatement.setObject(5, uuid);
+            preparedStatement.setString(5, uuid.toString());
             preparedStatement.executeUpdate();
         } catch(SQLException e) {
             e.printStackTrace();
