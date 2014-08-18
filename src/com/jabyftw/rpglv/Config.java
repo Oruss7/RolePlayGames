@@ -40,6 +40,7 @@ public class Config {
         FileConfiguration config = configYML.getConfig();
         config.addDefault("MySQL.username", "root");
         config.addDefault("MySQL.password", "pass");
+        
         config.addDefault("MySQL.url", "jdbc:mysql://localhost:3306/database");
         config.addDefault("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS", 1);
         config.addDefault("config.generateDefClassesYML", true);
@@ -47,6 +48,8 @@ public class Config {
         config.addDefault("config.useEXPChangeEvent", false);
         config.addDefault("config.blockItemMoveOnInventory", true);
         config.addDefault("config.maxLevel", 30);
+        String[] list = {"world", "world2"};
+        config.addDefault("config.worlds",  Arrays.asList(list));
         configYML.saveConfig();
         mySQLTableVersion = config.getInt("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS");
         useVault = config.getBoolean("config.useVaultSupport");

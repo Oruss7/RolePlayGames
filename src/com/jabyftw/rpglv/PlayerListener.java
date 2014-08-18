@@ -39,28 +39,34 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
-        new BukkitRunnable() {
 
-            @Override
-            public void run() {
-                Jogador j = pl.sql.getJogador(p.getUniqueId());
-                if (j != null) {
-                    pl.players.put(p, j);
-                } else {
-                    for (PotionEffect pet : p.getActivePotionEffects()) {
-                        p.removePotionEffect(pet.getType());
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+
+            new BukkitRunnable() {
+
+                @Override
+                public void run() {
+                    Jogador j = pl.sql.getJogador(p.getUniqueId());
+                    if (j != null) {
+                        pl.players.put(p, j);
+                    } else {
+                        for (PotionEffect pet : p.getActivePotionEffects()) {
+                            p.removePotionEffect(pet.getType());
+                        }
                     }
                 }
-            }
-        }.runTaskAsynchronously(pl);
+            }.runTaskAsynchronously(pl);
+        }
     }
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            pl.players.get(p).sendStatsToPlayer();
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (pl.players.containsKey(p)) {
+                pl.players.get(p).sendStatsToPlayer();
 
+            }
         }
     }
 
@@ -68,18 +74,20 @@ public class PlayerListener implements Listener {
     public void onItemMove(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
             Player p = (Player) e.getWhoClicked();
-            if (e.getCurrentItem() != null) {
-                if (pl.players.containsKey(p)) {
-                    if (e.getInventory() instanceof AnvilInventory) {
-                        e.setCancelled(true);
-                    } else if (e.getInventory() instanceof EnchantingInventory) {
-                        e.setCancelled(true);
-                    }
-                    if (!pl.blockItemMove && pl.proibido.contains(e.getCurrentItem().getType()) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                        p.getWorld().dropItemNaturally(p.getLocation(), e.getCurrentItem());
-                        p.getInventory().remove(e.getCurrentItem());
-                        p.sendMessage(pl.getLang("proibitedItem"));
-                        e.setCancelled(true);
+            if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+                if (e.getCurrentItem() != null) {
+                    if (pl.players.containsKey(p)) {
+                        if (e.getInventory() instanceof AnvilInventory) {
+                            e.setCancelled(true);
+                        } else if (e.getInventory() instanceof EnchantingInventory) {
+                            e.setCancelled(true);
+                        }
+                        if (!pl.blockItemMove && pl.proibido.contains(e.getCurrentItem().getType()) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getCurrentItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                            p.getWorld().dropItemNaturally(p.getLocation(), e.getCurrentItem());
+                            p.getInventory().remove(e.getCurrentItem());
+                            p.sendMessage(pl.getLang("proibitedItem"));
+                            e.setCancelled(true);
+                        }
                     }
                 }
             }
@@ -90,8 +98,10 @@ public class PlayerListener implements Listener {
     public void onClose(InventoryCloseEvent e) {
         if (e.getPlayer() instanceof Player) {
             Player p = (Player) e.getPlayer();
-            if (pl.players.containsKey(p)) {
-                pl.players.get(p).sendStatsToPlayer();
+            if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+                if (pl.players.containsKey(p)) {
+                    pl.players.get(p).sendStatsToPlayer();
+                }
             }
         }
     }
@@ -99,30 +109,33 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPickup(PlayerPickupItemEvent e) {
         Player p = e.getPlayer();
-        if (!pl.blockItemMove && pl.proibido.contains(e.getItem().getItemStack().getType()) && pl.players.containsKey(p)
-                && !pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-            if (!cooldown.contains(p.getName())) {
-                p.sendMessage(pl.getLang("proibitedItem"));
-                addCooldown(p.getName(), 3);
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (!pl.blockItemMove && pl.proibido.contains(e.getItem().getItemStack().getType()) && pl.players.containsKey(p)
+                    && !pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getItemStack().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                if (!cooldown.contains(p.getName())) {
+                    p.sendMessage(pl.getLang("proibitedItem"));
+                    addCooldown(p.getName(), 3);
+                }
+                e.setCancelled(true);
             }
-            e.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getMaterial() == Material.ENCHANTMENT_TABLE)
-        {
-            e.setCancelled(true);
-        }
-        if (e.getItem() != null) {
-            if (pl.proibido.contains(e.getItem().getType()) && pl.players.containsKey(p) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                if (!cooldown.contains(p.getName())) {
-                    p.sendMessage(pl.getLang("proibitedItem"));
-                    addCooldown(p.getName(), 3);
-                }
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getMaterial() == Material.ENCHANTMENT_TABLE) {
                 e.setCancelled(true);
+            }
+            if (e.getItem() != null) {
+                if (pl.proibido.contains(e.getItem().getType()) && pl.players.containsKey(p) && !pl.players.get(p).getItemRewardsAllowed().contains(e.getItem().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                    if (!cooldown.contains(p.getName())) {
+                        p.sendMessage(pl.getLang("proibitedItem"));
+                        addCooldown(p.getName(), 3);
+                    }
+                    e.setCancelled(true);
+                }
             }
         }
     }
@@ -140,26 +153,30 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
         Player p = e.getEntity();
-        if (pl.players.containsKey(p)) {
-            e.setKeepLevel(true);
-            e.setDroppedExp(0);
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (pl.players.containsKey(p)) {
+                e.setKeepLevel(true);
+                e.setDroppedExp(0);
+            }
         }
     }
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent e) {
         Player killer = e.getEntity().getKiller();
-        if (killer != null) {
-            if (pl.players.containsKey(killer)) {
-                Jogador j = pl.players.get(killer);
-                if (pl.useExp) {
-                    int gain = j.getClasse().getGain(e.getEntityType());
-                    if (gain > 0) {
-                        e.setDroppedExp(gain);
+        if (pl.getConfig().getList("config.worlds").contains(killer.getWorld().getName())) {
+            if (killer != null) {
+                if (pl.players.containsKey(killer)) {
+                    Jogador j = pl.players.get(killer);
+                    if (pl.useExp) {
+                        int gain = j.getClasse().getGain(e.getEntityType());
+                        if (gain > 0) {
+                            e.setDroppedExp(gain);
+                        }
+                    } else {
+                        j.addExp(j.getClasse().getGain(e.getEntityType()));
+                        e.setDroppedExp(0);
                     }
-                } else {
-                    j.addExp(j.getClasse().getGain(e.getEntityType()));
-                    e.setDroppedExp(0);
                 }
             }
         }
@@ -169,12 +186,14 @@ public class PlayerListener implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
         if (e.getDamager() instanceof Player) {
             Player p = (Player) e.getDamager();
-            if (pl.proibido.contains(p.getItemInHand().getType()) && pl.players.containsKey(p) && !pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                if (!cooldown.contains(p.getName())) {
-                    p.sendMessage(pl.getLang("proibitedItem"));
-                    addCooldown(p.getName(), 3);
+            if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+                if (pl.proibido.contains(p.getItemInHand().getType()) && pl.players.containsKey(p) && !pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                    if (!cooldown.contains(p.getName())) {
+                        p.sendMessage(pl.getLang("proibitedItem"));
+                        addCooldown(p.getName(), 3);
+                    }
+                    e.setCancelled(true);
                 }
-                e.setCancelled(true);
             }
         }
     }
@@ -182,9 +201,32 @@ public class PlayerListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            if (pl.proibido.contains(p.getItemInHand().getType())) {
-                if (!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (pl.players.containsKey(p)) {
+                if (pl.proibido.contains(p.getItemInHand().getType())) {
+                    if (!pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
+                        if (!cooldown.contains(p.getName())) {
+                            p.sendMessage(pl.getLang("proibitedItem"));
+                            addCooldown(p.getName(), 3);
+                        }
+                        e.setCancelled(true);
+                        return;
+                    }
+                }
+                Jogador j = pl.players.get(p);
+                j.addExp(j.getClasse().getBreakGain(e.getBlock().getType()));
+                e.setExpToDrop(0);
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlace(BlockPlaceEvent e) {
+        Player p = e.getPlayer();
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (pl.players.containsKey(p)) {
+                if (pl.proibido.contains(p.getItemInHand().getType()) && pl.players.containsKey(p)
+                        && !pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
                     if (!cooldown.contains(p.getName())) {
                         p.sendMessage(pl.getLang("proibitedItem"));
                         addCooldown(p.getName(), 3);
@@ -192,55 +234,43 @@ public class PlayerListener implements Listener {
                     e.setCancelled(true);
                     return;
                 }
+                Jogador j = pl.players.get(p);
+                j.addExp(j.getClasse().getPlaceGain(e.getBlock().getType()));
             }
-            Jogador j = pl.players.get(p);
-            j.addExp(j.getClasse().getBreakGain(e.getBlock().getType()));
-            e.setExpToDrop(0);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlace(BlockPlaceEvent e) {
-        Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            if (pl.proibido.contains(p.getItemInHand().getType()) && pl.players.containsKey(p)
-                    && !pl.players.get(p).getItemRewardsAllowed().contains(p.getItemInHand().getType()) && !p.hasPermission("rpglevel.bypass.itembanning")) {
-                if (!cooldown.contains(p.getName())) {
-                    p.sendMessage(pl.getLang("proibitedItem"));
-                    addCooldown(p.getName(), 3);
-                }
-                e.setCancelled(true);
-                return;
-            }
-            Jogador j = pl.players.get(p);
-            j.addExp(j.getClasse().getPlaceGain(e.getBlock().getType()));
         }
     }
 
     @EventHandler
     public void onSmelt(FurnaceExtractEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            Jogador j = pl.players.get(p);
-            j.addExp((j.getClasse().getSmeltGain(e.getItemType())) * e.getItemAmount());
-            e.setExpToDrop(0);
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (pl.players.containsKey(p)) {
+                Jogador j = pl.players.get(p);
+                j.addExp((j.getClasse().getSmeltGain(e.getItemType())) * e.getItemAmount());
+                e.setExpToDrop(0);
+            }
         }
     }
 
     @EventHandler
     public void onExp(PlayerExpChangeEvent e) {
         Player p = e.getPlayer();
-        if (pl.players.containsKey(p)) {
-            if (pl.useExp) {
-                pl.players.get(p).addExp(e.getAmount());
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (pl.players.containsKey(p)) {
+                if (pl.useExp) {
+                    pl.players.get(p).addExp(e.getAmount());
+                }
+                e.setAmount(0);
             }
-            e.setAmount(0);
         }
     }
 
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
     public void onEnchant(EnchantItemEvent e) {
+        Player p = e.getEnchanter();
+        if(pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())){
         e.setCancelled(true);
+        }
 
     }
 
