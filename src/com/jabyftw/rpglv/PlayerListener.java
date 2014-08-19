@@ -94,6 +94,7 @@ public class PlayerListener implements Listener {
 //        }
 //        
 //        pl.getLogger().log(Level.INFO, "nouveau xp: "+p.getExp());
+        
         /**
          * Player without class must be teleported at first spawn
          */
