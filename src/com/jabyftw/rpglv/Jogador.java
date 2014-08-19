@@ -51,6 +51,10 @@ public class Jogador {
     public int getRealLevel() {
         return realLevel;
     }
+    
+    public void setRealLevel(int realLevel){
+        this.realLevel = realLevel;
+    }
 
     public void addRealLevel(int added) {
         realLevel += added;

@@ -1,7 +1,10 @@
 package com.jabyftw.rpglv;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -40,8 +43,6 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
 
-        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
-
             new BukkitRunnable() {
 
                 @Override
@@ -56,7 +57,6 @@ public class PlayerListener implements Listener {
                     }
                 }
             }.runTaskAsynchronously(pl);
-        }
     }
 
     @EventHandler
@@ -69,6 +69,28 @@ public class PlayerListener implements Listener {
             }
         }
     }
+    
+//    @EventHandler
+//    public void onWorldChange(PlayerChangedWorldEvent event){
+//        Player p = event.getPlayer();
+//        
+//        pl.getLogger().log(Level.INFO, "ancien xp: "+p.getExp());
+//        
+//        if (!pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+//            if (pl.players.containsKey(p)) {
+//                pl.players.get(p).savePlayer(true);
+//                p.setTotalExperience(pl.players.get(p).getRealLevel());
+//            }
+//        }else if(!pl.getConfig().getList("config.worlds").contains(event.getFrom())){
+//            if (pl.players.containsKey(p)) {
+//                pl.players.get(p).setRealLevel((int) p.getTotalExperience());
+//                pl.players.get(p).sendStatsToPlayer();
+//            }
+//        }
+//        
+//        pl.getLogger().log(Level.INFO, "nouveau xp: "+p.getExp());
+//        
+//    }
 
     @EventHandler
     public void onItemMove(InventoryClickEvent e) {
@@ -164,8 +186,8 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onEntityDeath(EntityDeathEvent e) {
         Player killer = e.getEntity().getKiller();
-        if (pl.getConfig().getList("config.worlds").contains(killer.getWorld().getName())) {
-            if (killer != null) {
+        if (killer != null) {
+            if (pl.getConfig().getList("config.worlds").contains(killer.getWorld().getName())) {
                 if (pl.players.containsKey(killer)) {
                     Jogador j = pl.players.get(killer);
                     if (pl.useExp) {
@@ -223,6 +245,7 @@ public class PlayerListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
+        pl.getLogger().log(Level.INFO, p.getWorld().getName());
         if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
             if (pl.players.containsKey(p)) {
                 if (pl.proibido.contains(p.getItemInHand().getType()) && pl.players.containsKey(p)
@@ -268,8 +291,8 @@ public class PlayerListener implements Listener {
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
     public void onEnchant(EnchantItemEvent e) {
         Player p = e.getEnchanter();
-        if(pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())){
-        e.setCancelled(true);
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            e.setCancelled(true);
         }
 
     }
