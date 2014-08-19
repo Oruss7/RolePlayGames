@@ -1,10 +1,8 @@
 package com.jabyftw.rpglv;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -43,20 +41,27 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
 
-            new BukkitRunnable() {
+        new BukkitRunnable() {
 
-                @Override
-                public void run() {
-                    Jogador j = pl.sql.getJogador(p.getUniqueId());
-                    if (j != null) {
-                        pl.players.put(p, j);
-                    } else {
-                        for (PotionEffect pet : p.getActivePotionEffects()) {
-                            p.removePotionEffect(pet.getType());
-                        }
+            @Override
+            public void run() {
+                Jogador j = pl.sql.getJogador(p.getUniqueId());
+                if (j != null) {
+                    pl.players.put(p, j);
+                } else {
+                    for (PotionEffect pet : p.getActivePotionEffects()) {
+                        p.removePotionEffect(pet.getType());
                     }
                 }
-            }.runTaskAsynchronously(pl);
+
+                if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+                    if (pl.getConfig().getBoolean("config.mustHaveClass") && !pl.players.containsKey(p)) {
+                        p.teleport(pl.firstSpawn);
+                        p.sendMessage(pl.getLang("mustHaveClass"));
+                    }
+                }
+            }
+        }.runTaskAsynchronously(pl);
     }
 
     @EventHandler
@@ -69,11 +74,11 @@ public class PlayerListener implements Listener {
             }
         }
     }
-    
-//    @EventHandler
-//    public void onWorldChange(PlayerChangedWorldEvent event){
-//        Player p = event.getPlayer();
-//        
+
+    @EventHandler
+    public void onWorldChange(PlayerChangedWorldEvent event) {
+        Player p = event.getPlayer();
+
 //        pl.getLogger().log(Level.INFO, "ancien xp: "+p.getExp());
 //        
 //        if (!pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
@@ -89,8 +94,16 @@ public class PlayerListener implements Listener {
 //        }
 //        
 //        pl.getLogger().log(Level.INFO, "nouveau xp: "+p.getExp());
-//        
-//    }
+        /**
+         * Player without class must be teleported at first spawn
+         */
+        if (pl.getConfig().getList("config.worlds").contains(p.getWorld().getName())) {
+            if (pl.getConfig().getBoolean("config.mustHaveClass") && !pl.players.containsKey(p)) {
+                p.teleport(pl.firstSpawn);
+                p.sendMessage(pl.getLang("mustHaveClass"));
+            }
+        }
+    }
 
     @EventHandler
     public void onItemMove(InventoryClickEvent e) {

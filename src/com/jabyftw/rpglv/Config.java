@@ -40,7 +40,7 @@ public class Config {
         FileConfiguration config = configYML.getConfig();
         config.addDefault("MySQL.username", "root");
         config.addDefault("MySQL.password", "pass");
-        
+
         config.addDefault("MySQL.url", "jdbc:mysql://localhost:3306/database");
         config.addDefault("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS", 1);
         config.addDefault("config.generateDefClassesYML", true);
@@ -49,7 +49,12 @@ public class Config {
         config.addDefault("config.blockItemMoveOnInventory", true);
         config.addDefault("config.maxLevel", 30);
         String[] list = {"world", "world2"};
-        config.addDefault("config.worlds",  Arrays.asList(list));
+        config.addDefault("config.worlds", Arrays.asList(list));
+        config.addDefault("config.mustHaveClass", true);
+        config.addDefault("First Spawn.world", "world");
+        config.addDefault("First Spawn.x", Integer.valueOf(0));
+        config.addDefault("First Spawn.y", Integer.valueOf(0));
+        config.addDefault("First Spawn.z", Integer.valueOf(0));
         configYML.saveConfig();
         mySQLTableVersion = config.getInt("MySQL.mysqlTableVersion.DO_NOT_CHANGE_THIS");
         useVault = config.getBoolean("config.useVaultSupport");
@@ -63,7 +68,7 @@ public class Config {
         FileConfiguration classes = classesYML.getConfig();
         String[] blocked = {"diamond_sword", "276"};
         classes.addDefault("options.blockedItems", Arrays.asList(blocked));
-        if(configYML.getConfig().getBoolean("config.generateDefClassesYML")) {
+        if (configYML.getConfig().getBoolean("config.generateDefClassesYML")) {
             classes.addDefault("classes.noob.name", "Noob");
             classes.addDefault("classes.noob.permissionToJoin", "rpglevel.join");
             String[] rewards = {"10;playercommand;motd", "10;consolecommand;tell %player% hello", "10;permission;essentials.motd", "10;reallevel;15", "10;money;2500", "20;money;5000", "20;reallevel;30", "30;reallevel;60", "30;item_permission;diamond_sword"};
@@ -84,16 +89,16 @@ public class Config {
             classes.addDefault("classes.noob.levelingEquation", "100*(1.16^(%level-1))"); // Thanks phrstbrn and "Jobs"
             classesYML.saveConfig();
         }
-        for(String s : classes.getStringList("options.blockedItems")) {
+        for (String s : classes.getStringList("options.blockedItems")) {
             pl.proibido.add(pl.getMatFromString(s));
         }
-        for(String key : classes.getConfigurationSection("classes").getKeys(false)) {
+        for (String key : classes.getConfigurationSection("classes").getKeys(false)) {
             String name = classes.getString("classes." + key + ".name");
             String leveling = classes.getString("classes." + key + ".levelingEquation");
             String permission = classes.getString("classes." + key + ".permissionToJoin");
             boolean isDefaultClass = classes.getBoolean("classes." + key + ".default");
             Classe c = new Classe(pl, name, leveling, permission, classes.getStringList("classes." + key + ".broadcastLevels"), classes.getStringList("classes." + key + ".rewards"), classes.getStringList("classes." + key + ".potioneffects"), getGains(classes.getStringList("classes." + key + ".killGain")), getGains(classes.getStringList("classes." + key + ".breakGain")), getGains(classes.getStringList("classes." + key + ".placeGain")), getGains(classes.getStringList("classes." + key + ".smeltGain")));
-            if(isDefaultClass) {
+            if (isDefaultClass) {
                 pl.defaultClass = c;
             }
             pl.classes.add(c);
@@ -104,6 +109,7 @@ public class Config {
         FileConfiguration lang = langYML.getConfig();
         //lang.addDefault("lang.", "&");
         lang.addDefault("lang.proibitedItem", "&cProibited item! Can't use it yet.");
+        lang.addDefault("lang.mustHaveClass", "&cYou need choose a class.");
         lang.addDefault("lang.broadcastLevel", "%name &6reached level &e%level &6on class &e%class&6.");
         lang.addDefault("lang.youNowCanUse", "&6You can now use &e%material&6!");
         lang.addDefault("lang.youGainedAPermission", "&6You've received a new permission!");
@@ -128,11 +134,11 @@ public class Config {
 
     private Map<String, Integer> getGains(List<String> gains) {
         Map<String, Integer> l = new HashMap<String, Integer>();
-        for(String s : gains) {
+        for (String s : gains) {
             String[] s1 = s.split(";");
             try {
                 l.put(s1[0], Integer.parseInt(s1[1]));
-            } catch(NumberFormatException ignored) {
+            } catch (NumberFormatException ignored) {
             }
         }
         return l;
@@ -157,7 +163,7 @@ public class Config {
         }
 
         public FileConfiguration getConfig() {
-            if(fileConfig == null) {
+            if (fileConfig == null) {
                 reloadConfig();
             }
             return fileConfig;
@@ -166,7 +172,7 @@ public class Config {
         private void reloadConfig() {
             fileConfig = YamlConfiguration.loadConfiguration(file);
             InputStream defConfigStream = pl.getResource(name + ".yml");
-            if(defConfigStream != null) {
+            if (defConfigStream != null) {
                 YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
                 fileConfig.setDefaults(defConfig);
             }
@@ -177,7 +183,7 @@ public class Config {
                 getConfig().options().copyDefaults(true);
                 getConfig().save(file);
                 reloadConfig();
-            } catch(IOException ex) {
+            } catch (IOException ex) {
                 pl.getLogger().log(Level.WARNING, "Couldn't save " + name + ".yml");
             }
         }

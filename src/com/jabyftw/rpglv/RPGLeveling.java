@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.bukkit.Location;
 
 /**
  * @author Rafael
@@ -36,6 +37,7 @@ public class RPGLeveling extends JavaPlugin {
     public Classe defaultClass;
     public PlayerListener playerListener;
     public List<Classe> classes = new ArrayList<Classe>();
+    public Location firstSpawn;
 
     @Override
     public void onEnable() {
@@ -48,6 +50,8 @@ public class RPGLeveling extends JavaPlugin {
             getLogger().info("Couldn't setup Vault!");
             config.useVault = false;
         }
+        
+        firstSpawn = new Location(getServer().getWorld(config.configYML.getConfig().getString("First Spawn.world")), config.configYML.getConfig().getInt("First Spawn.x"), config.configYML.getConfig().getInt("First Spawn.y"), config.configYML.getConfig().getInt("First Spawn.z"));
         playerListener = new PlayerListener(this);
         getServer().getPluginManager().registerEvents(playerListener, this);
         getServer().getPluginCommand("class").setExecutor(new ClassExecutor(this));
