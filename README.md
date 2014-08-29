@@ -21,11 +21,12 @@ By  rfsantos1996, Jerry99666iner and Mre30
 ===========
 ## Personnalisation pour le serveur Jeux de Rôle eredrim.fr
 
-    Ajout du support Multimonde (softdepend multiverse)
-    Autorisation/refus de créer certains objets pour certaines classes/niveaux
-    Obligation de choisir une classe en entrant dans le monde Jeux de Rôle
-    Utilisation de MoreHearth directement dans le plugin (softdepend More Hearts)
-    Retrait de l'expérience réelle (minecraft vanilla)
-    Interdiction d'utiliser les tables d'enchantement et les forges
+    - Ajout du support Multimonde (softdepend multiverse)
+    - Autorisation/refus de créer certains objets pour certaines classes/niveaux
+    - Téléportation dans un lieu "de départ" afin d'obliger les joueurs de choisir
+      une classe en entrant dans le monde Jeux de Rôle
+    - Retrait de l'expérience réelle (minecraft vanilla)
+    - Interdiction d'utiliser les tables d'enchantement et les forges
+    - Support multi-monde (require Multiverse Inventory pour le moment)
     
     Une API pour être facilement utilisé par d'autre plugin ?
